@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -112,6 +113,17 @@ async def _validate_local(user_input: dict[str, Any]) -> tuple[str, dict[str, st
             "expected": str(fmt.expected_length),
         }
     return xml, {}, {}
+
+
+def model_info(installation: dict[str, Any]) -> tuple[str | None, float | None]:
+    """Model name and nominal power from the cloud, e.g. 'Eco-HK 50' -> ('Eco-HK 50', 50.0)."""
+    devices = installation.get("devices") or []
+    model = next((d.get("type") for d in devices if isinstance(d, dict) and isinstance(d.get("type"), str)), None)
+    if not model:
+        return None, None
+    match = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:kW)?\s*$", model, re.IGNORECASE)
+    power = float(match.group(1).replace(",", ".")) if match else None
+    return model, power if power and 5 <= power <= 500 else None
 
 
 async def _cloud_login(hass: Any, email: str, password: str) -> tuple[list[dict[str, Any]], str | None]:
@@ -227,7 +239,13 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
     def _create_with_installation(self, installation: dict[str, Any]) -> ConfigFlowResult:
         self._data[CONF_INSTALLATION_ID] = str(installation.get("id"))
         self._data[CONF_INSTALLATION_NAME] = str(installation.get("name") or installation.get("id"))
-        return self.async_create_entry(title=self._title, data=self._data)
+        model, power = model_info(installation)
+        options: dict[str, Any] = {}
+        if model:
+            self._data[CONF_MODEL] = model
+        if power:
+            options[CONF_NOMINAL_POWER] = power
+        return self.async_create_entry(title=self._title, data=self._data, options=options)
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Change host or re-import the DAQ template (e.g. after a firmware update)."""

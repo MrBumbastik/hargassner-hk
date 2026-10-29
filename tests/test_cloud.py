@@ -154,3 +154,45 @@ async def test_action_buttons(hass: HomeAssistant, fake_boiler: FakeBoiler, clou
 
     await hass.services.async_call("button", "press", {"entity_id": buffer}, blocking=True)
     post_action.assert_awaited_with(f"{BASE}/buffer/default/actions/force-charging")
+
+
+@pytest.mark.parametrize(
+    ("devices", "expected"),
+    [
+        ([{"type": "Eco-HK 50"}], ("Eco-HK 50", 50.0)),
+        ([{"type": "Nano.2 12"}], ("Nano.2 12", 12.0)),
+        ([{"type": "Magna 200 kW"}], ("Magna 200 kW", 200.0)),
+        ([{"type": "Eco-HK"}], ("Eco-HK", None)),
+        ([], (None, None)),
+    ],
+)
+def test_model_info(devices: list, expected: tuple) -> None:
+    from custom_components.hargassner_hk.config_flow import model_info
+
+    assert model_info({"devices": devices}) == expected
+
+
+async def test_config_flow_with_cloud_sets_model_and_power(hass: HomeAssistant, fake_boiler: FakeBoiler) -> None:
+    from homeassistant import config_entries
+    from homeassistant.const import CONF_NAME
+    from homeassistant.data_entry_flow import FlowResultType
+
+    from custom_components.hargassner_hk.const import CONF_MODEL, CONF_NOMINAL_POWER
+
+    installations = [{"id": 7, "name": "Test", "devices": [{"type": "Eco-HK 50"}]}]
+    with patch(
+        "custom_components.hargassner_hk.config_flow._cloud_login", AsyncMock(return_value=(installations, None))
+    ):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Eco-HK", CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port, CONF_DAQ_XML: DAQ_XML},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USE_CLOUD: True, CONF_EMAIL: "user@example.com", CONF_PASSWORD: "x"}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_MODEL] == "Eco-HK 50"
+    assert result["data"][CONF_INSTALLATION_ID] == "7"
+    assert result["result"].options[CONF_NOMINAL_POWER] == 50.0
+    await hass.async_block_till_done()
