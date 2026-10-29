@@ -1,6 +1,20 @@
 # Hargassner HK – Home Assistant Integration für Hackgutkessel
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+![Status](https://img.shields.io/badge/Status-ungetestet-red.svg)
+![Vibecoded](https://img.shields.io/badge/vibecoded-KI--generiert-blueviolet.svg)
+
+> [!WARNING]
+> **Früher, ungetesteter Stand (v0.1.0). Bitte lesen, bevor du es installierst.**
+>
+> - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft.
+> - **Ungetestet:** Die Integration lief noch an **keinem echten Kessel**. Es gibt automatische Tests, aber die laufen nur gegen einen simulierten Kessel und nachgebaute Cloud-Daten.
+> - Die Eco-HK-spezifischen Teile, also Kanalnamen sowie Zustands- und Störungscodes, sind **Annahmen**. Sie stammen von der Pellet-Steuerung derselben Gerätefamilie.
+> - Die Cloud-Funktionen **schreiben Werte in deinen Kessel**, zum Beispiel Sollwerte, Betriebsarten und das Kesselprogramm. Nutze sie nur, wenn du weißt, was du tust. Die Verantwortung liegt bei dir.
+>
+> Ausprobieren, Fehlerberichte und Diagnosedaten von echten Anlagen sind sehr willkommen. Für den produktiven Einsatz ist der Stand noch **nicht** gedacht.
+
+> **English:** Unofficial Home Assistant integration for Hargassner wood chip boilers (Eco-HK). Early, **untested and vibecoded (AI-generated)**. It has never run against a real boiler. Use at your own risk; bug reports welcome.
 
 Inoffizielle Integration für **Hargassner Hackschnitzelkessel (Eco-HK)** mit Touch-Tronic-Steuerung.
 
@@ -118,6 +132,15 @@ Geprüft an einem Eco-HK 50 mit Firmware V30.0HAR.f:
 - Die Zustands- und Störungscodes stammen aus der Pellet-Firmware (Nano-PK) derselben Steuerungsfamilie. **Für den Eco-HK sind sie nicht verifiziert.** Unbekannte Zustände erscheinen als „Sonstiger Zustand“ und unbekannte Störungen als „Störung &lt;Nr&gt;“, jeweils mit dem Code als Attribut. Bitte melde fehlende Codes.
 - Die Kanalnamen im Eco-HK-Template können von den hier hinterlegten abweichen. Solche Kanäle erscheinen trotzdem, nur mit ihrem Template-Namen. Für die Ergänzung in `channels.py` helfen die **Diagnosedaten** (Gerät → ⋮ → Diagnose herunterladen); E-Mail und Passwort sind darin geschwärzt.
 - Der Touch-Tronic erlaubt eventuell nur **eine** Telnet-Verbindung gleichzeitig. Andere Tools, die Port 23 nutzen, solange parallel nicht verwenden.
+
+## Mithelfen
+
+Am meisten helfen Rückmeldungen von echten Anlagen. Bitte ein [Issue](https://github.com/MrBumbastik/hargassner-hk/issues) öffnen mit:
+- Kesselmodell und Firmware-Version (steht am Touch-Tronic und in den Diagnosedaten),
+- den **Diagnosedaten** (Gerät → ⋮ → Diagnose herunterladen). E-Mail und Passwort sind darin geschwärzt. Prüfe sie trotzdem vor dem Hochladen auf persönliche Angaben,
+- gern dem `<DAQPRJ>`-Block deiner DAQ-Datei.
+
+Auf der [Roadmap](TODO.md) steht, was als Nächstes geplant ist.
 
 ## Entwicklung
 
