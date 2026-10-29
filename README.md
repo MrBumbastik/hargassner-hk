@@ -95,7 +95,23 @@ actions:
 - **Kesselzustand** (Aus, Zündung, Leistungsbrand, Gluterhaltung, Entaschung …) mit dem Rohcode als Attribut.
 - **Störung** als Text mit Code, dazu der Binärsensor *Störung aktiv*.
 - **Binärsensoren:** Digitalkanäle wie Pumpen und Störmeldung, *Brenner aktiv*, lokale Verbindung und Cloud-Verbindung.
-- **Mit Cloud:** Climate pro Heizkreis, Sollwerte und Heizkurve als Number, Betriebsart als Select. Unbekannte Cloud-Parameter, etwa Warmwasser oder Puffer, werden deaktiviert angelegt.
+- **Mit Cloud:**
+  - Climate pro Heizkreis
+  - Number: Raumtemperatur Tag und Nacht, Raumtemperatur-Korrektur, Heizkurve (Radiator und Fußboden), Heizgrenzen, Warmwasser-Solltemperatur
+  - Select: Kesselprogramm (Aus, Nur Warmwasser, Automatik, Abbrand) und Betriebsart pro Heizkreis
+  - Buttons: Puffer zwangsladen, Warmwasser zwangsladen, Zirkulation einmalig
+  - Unbekannte Cloud-Parameter werden deaktiviert angelegt.
+  - Modell und Nennleistung werden aus der Cloud übernommen („Eco-HK 50“ → 50 kW).
+
+## Was die Cloud liefert und was nicht
+
+Geprüft an einem Eco-HK 50 mit Firmware V30.0HAR.f:
+
+- Die Cloud aktualisiert nur alle **5 Minuten** und kennt rund 30 Messkanäle: Kessel, Rauchgas, O₂, Rücklauf, Puffer, Heizkreise und Warmwasser.
+- **Keine Hackgut-Werte:** Saugzug, Einschub, Raumaustragung, Schieberost, Ascheaustragung und Motorströme gibt es nur im lokalen Datenstrom.
+- Der Lagerstand (`fuel_stock`) ist beim Eco-HK leer, deshalb berechnet die Integration ihn selbst.
+- Der Cloud-Wert `efficiency` ist trotz des Namens die **Kesselleistung in %**, nicht der Wirkungsgrad.
+- Die vollständige Parameterliste und die Gerätefunktionen sind nur für Servicepartner freigegeben (HTTP 403 für Kundenkonten).
 
 ## Bekannte Grenzen / bitte melden
 
