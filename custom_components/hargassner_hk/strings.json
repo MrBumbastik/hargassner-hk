@@ -1,0 +1,202 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hargassner wood chip boiler",
+        "description": "Connect to the local data stream of the Touch-Tronic (LAN, port 23).\n\nThe DAQ template describes the fields of your firmware. Enable SD logging on the boiler, insert an SD card for a few minutes, open `DAQ00000.DAQ` in a text editor and copy the `<DAQPRJ>…</DAQPRJ>` block at the beginning (pasting the whole file also works).",
+        "data": {
+          "name": "Name",
+          "host": "IP address of the boiler",
+          "port": "Port",
+          "daq_xml": "DAQ template"
+        }
+      },
+      "cloud": {
+        "title": "Hargassner cloud (optional)",
+        "description": "The local stream is read-only. With the cloud login (app account) you can also change setpoints and circuit modes.",
+        "data": {
+          "use_cloud": "Use cloud for control",
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "installation": {
+        "title": "Choose installation",
+        "data": { "installation_id": "Installation" }
+      },
+      "reconfigure": {
+        "title": "Reconfigure boiler",
+        "description": "Change the address or import a new DAQ template, e.g. after a firmware update.",
+        "data": {
+          "host": "IP address of the boiler",
+          "port": "Port",
+          "daq_xml": "DAQ template"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Cloud login expired",
+        "description": "The Hargassner cloud rejected the stored credentials.",
+        "data": { "email": "Email", "password": "Password" }
+      }
+    },
+    "error": {
+      "invalid_daq": "The DAQ template could not be read: {error_detail}",
+      "cannot_connect": "No connection to the boiler. Check IP address, port and that the boiler is on the LAN.",
+      "template_mismatch": "The boiler sends {received} values per line, the template describes {expected}. The template does not match this firmware.",
+      "invalid_auth": "Cloud login failed: wrong email or password.",
+      "cloud_cannot_connect": "The Hargassner cloud is not reachable.",
+      "no_installations": "No installation found in this cloud account.",
+      "credentials_required": "Enter email and password, or disable the cloud."
+    },
+    "abort": {
+      "already_configured": "This boiler is already set up.",
+      "reconfigure_successful": "Configuration updated.",
+      "reauth_successful": "Login updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Settings",
+        "description": "Heat and fuel are estimated from the burner output: heat = output × nominal power, fuel = heat ÷ (calorific value × efficiency). Calibrate the calorific value with real deliveries.",
+        "data": {
+          "update_interval": "Update interval (local)",
+          "cloud_interval": "Update interval (cloud)",
+          "power_channel": "Channel for burner output (%)",
+          "nominal_power": "Nominal boiler power",
+          "calorific_value": "Calorific value of the wood chips",
+          "bulk_density": "Bulk density",
+          "efficiency": "Boiler efficiency"
+        },
+        "data_description": {
+          "power_channel": "Usually 'Leistung'. Choose '-' to disable heat and fuel figures.",
+          "calorific_value": "Spruce W20 ≈ 4.0, W30 ≈ 3.4, W40 ≈ 2.8 kWh/kg",
+          "bulk_density": "Spruce W30 ≈ 200–230, beech W30 ≈ 300–340 kg/SRM"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "boiler_temperature": { "name": "Boiler temperature" },
+      "boiler_temperature_target": { "name": "Boiler target temperature" },
+      "flue_gas_temperature": { "name": "Flue gas temperature" },
+      "oxygen": { "name": "Residual oxygen" },
+      "oxygen_target": { "name": "Residual oxygen target" },
+      "output": { "name": "Output" },
+      "draft_fan": { "name": "Induced draft fan" },
+      "draft_fan_target": { "name": "Induced draft fan target" },
+      "feed_target": { "name": "Feed screw target" },
+      "negative_pressure": { "name": "Combustion chamber negative pressure" },
+      "return_temperature": { "name": "Return temperature" },
+      "return_temperature_target": { "name": "Return target temperature" },
+      "current_feed": { "name": "Current feed screw" },
+      "current_room_discharge": { "name": "Current room discharge" },
+      "current_ash_discharge": { "name": "Current ash discharge" },
+      "current_sliding_grate": { "name": "Current sliding grate" },
+      "current_cleaning": { "name": "Current cleaning" },
+      "outdoor_temperature": { "name": "Outdoor temperature" },
+      "outdoor_temperature_average": { "name": "Outdoor temperature average" },
+      "buffer_top": { "name": "Buffer top" },
+      "buffer_upper_middle": { "name": "Buffer upper middle" },
+      "buffer_middle": { "name": "Buffer middle" },
+      "buffer_lower_middle": { "name": "Buffer lower middle" },
+      "buffer_bottom": { "name": "Buffer bottom" },
+      "buffer_charge": { "name": "Buffer charge" },
+      "flow_temperature": { "name": "Flow temperature circuit {number}" },
+      "flow_temperature_target": { "name": "Flow target temperature circuit {number}" },
+      "dhw_temperature": { "name": "Hot water temperature {number}" },
+      "dhw_temperature_target": { "name": "Hot water target temperature {number}" },
+      "boiler_state": {
+        "name": "Boiler state",
+        "state": {
+          "off": "Off",
+          "preparing_start": "Preparing start",
+          "boiler_start": "Boiler start",
+          "ignition_monitoring": "Monitoring ignition",
+          "ignition": "Ignition",
+          "transition_full_firing": "Transition to full firing",
+          "full_firing": "Full firing",
+          "ember_preservation": "Ember preservation",
+          "waiting_ash_removal": "Waiting for ash removal",
+          "ash_removal": "Ash removal",
+          "cleaning": "Cleaning",
+          "other": "Other"
+        }
+      },
+      "fault_message": { "name": "Fault" },
+      "heat_energy": { "name": "Heat produced" },
+      "fuel_consumed": { "name": "Wood chips consumed" },
+      "fuel_consumed_srm": { "name": "Wood chips consumed (SRM)" },
+      "fuel_today": { "name": "Wood chips today" },
+      "fuel_daily_average": { "name": "Wood chips daily average" },
+      "storage_kg": { "name": "Storage level (kg)" },
+      "storage_srm": { "name": "Storage level (SRM)" },
+      "days_remaining": { "name": "Storage range" },
+      "frames_received": { "name": "Frames received" }
+    },
+    "binary_sensor": {
+      "fault": { "name": "Fault signal" },
+      "safety_limiter": { "name": "Safety temperature limiter" },
+      "boiler_contact": { "name": "Boiler contact" },
+      "circuit_pump": { "name": "Circuit pump {number}" },
+      "dhw_pump": { "name": "Hot water pump {number}" },
+      "return_pump": { "name": "Return pump" },
+      "local_connection": { "name": "Local connection" },
+      "burning": { "name": "Burner active" },
+      "fault_active": { "name": "Fault active" },
+      "cloud_connection": { "name": "Cloud connection" }
+    },
+    "number": {
+      "storage_level": { "name": "Storage level" },
+      "room_temperature_day": { "name": "Room temperature day" },
+      "room_temperature_night": { "name": "Room temperature night" },
+      "deactivation_limit_heating": { "name": "Heating limit (heating)" },
+      "deactivation_limit_reduction_day": { "name": "Heating limit (setback day)" },
+      "deactivation_limit_reduction_night": { "name": "Heating limit (setback night)" },
+      "heating_curve_steepness": { "name": "Heating curve slope" }
+    },
+    "select": {
+      "circuit_mode": {
+        "name": "Operating mode",
+        "state": {
+          "mode_off": "Off",
+          "mode_automatic": "Automatic",
+          "mode_heating": "Heating",
+          "mode_reduction": "Setback",
+          "mode_bridge_reduction": "Bridge setback",
+          "mode_bridge_heating": "Bridge heating"
+        }
+      },
+      "pool_heating": {
+        "name": "Pool heating",
+        "state": {
+          "pool_heating_off": "Off",
+          "pool_heating_on": "On",
+          "pool_heating_automatic": "Automatic"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_loaded": { "message": "This Hargassner HK entry is not loaded." }
+  },
+  "services": {
+    "refill": {
+      "name": "Wood chips delivered",
+      "description": "Adds a delivery to the storage level.",
+      "fields": {
+        "config_entry_id": { "name": "Boiler", "description": "Boiler whose store was filled." },
+        "amount": { "name": "Amount", "description": "Delivered amount in SRM." }
+      }
+    },
+    "set_storage": {
+      "name": "Set storage level",
+      "description": "Sets the storage level, e.g. after measuring it.",
+      "fields": {
+        "config_entry_id": { "name": "Boiler", "description": "Boiler whose store is meant." },
+        "amount": { "name": "Storage level", "description": "Current storage level in SRM." }
+      }
+    }
+  }
+}

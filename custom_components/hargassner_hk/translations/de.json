@@ -1,0 +1,202 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hargassner Hackgutkessel",
+        "description": "Verbindung zum lokalen Datenstrom des Touch-Tronic (LAN, Port 23).\n\nDas DAQ-Template beschreibt die Felder deiner Firmware. Aktiviere am Kessel die SD-Aufzeichnung, stecke für ein paar Minuten eine SD-Karte ein, öffne `DAQ00000.DAQ` in einem Texteditor und kopiere den `<DAQPRJ>…</DAQPRJ>`-Block am Anfang (die ganze Datei einfügen geht auch).",
+        "data": {
+          "name": "Name",
+          "host": "IP-Adresse des Kessels",
+          "port": "Port",
+          "daq_xml": "DAQ-Template"
+        }
+      },
+      "cloud": {
+        "title": "Hargassner-Cloud (optional)",
+        "description": "Der lokale Datenstrom kann nur gelesen werden. Mit dem Cloud-Login (App-Konto) kannst du auch Sollwerte und Heizkreis-Betriebsarten ändern.",
+        "data": {
+          "use_cloud": "Cloud zum Steuern verwenden",
+          "email": "E-Mail",
+          "password": "Passwort"
+        }
+      },
+      "installation": {
+        "title": "Anlage wählen",
+        "data": { "installation_id": "Anlage" }
+      },
+      "reconfigure": {
+        "title": "Kessel neu konfigurieren",
+        "description": "Adresse ändern oder ein neues DAQ-Template einlesen, z. B. nach einem Firmware-Update.",
+        "data": {
+          "host": "IP-Adresse des Kessels",
+          "port": "Port",
+          "daq_xml": "DAQ-Template"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Cloud-Anmeldung abgelaufen",
+        "description": "Die Hargassner-Cloud hat die gespeicherten Zugangsdaten abgelehnt.",
+        "data": { "email": "E-Mail", "password": "Passwort" }
+      }
+    },
+    "error": {
+      "invalid_daq": "Das DAQ-Template konnte nicht gelesen werden: {error_detail}",
+      "cannot_connect": "Keine Verbindung zum Kessel. Prüfe IP-Adresse und Port und ob der Kessel im LAN ist.",
+      "template_mismatch": "Der Kessel sendet {received} Werte pro Zeile, das Template beschreibt {expected}. Das Template passt nicht zu dieser Firmware.",
+      "invalid_auth": "Cloud-Anmeldung fehlgeschlagen: E-Mail oder Passwort falsch.",
+      "cloud_cannot_connect": "Die Hargassner-Cloud ist nicht erreichbar.",
+      "no_installations": "In diesem Cloud-Konto wurde keine Anlage gefunden.",
+      "credentials_required": "Gib E-Mail und Passwort ein oder deaktiviere die Cloud."
+    },
+    "abort": {
+      "already_configured": "Dieser Kessel ist bereits eingerichtet.",
+      "reconfigure_successful": "Konfiguration aktualisiert.",
+      "reauth_successful": "Anmeldung aktualisiert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Einstellungen",
+        "description": "Wärme und Brennstoff werden aus der Kesselleistung geschätzt: Wärme = Leistung × Nennleistung, Brennstoff = Wärme ÷ (Heizwert × Wirkungsgrad). Kalibriere den Heizwert anhand echter Lieferungen.",
+        "data": {
+          "update_interval": "Aktualisierungsintervall (lokal)",
+          "cloud_interval": "Aktualisierungsintervall (Cloud)",
+          "power_channel": "Kanal für die Kesselleistung (%)",
+          "nominal_power": "Nennleistung des Kessels",
+          "calorific_value": "Heizwert der Hackschnitzel",
+          "bulk_density": "Schüttdichte",
+          "efficiency": "Kesselwirkungsgrad"
+        },
+        "data_description": {
+          "power_channel": "Meist 'Leistung'. '-' deaktiviert Wärme- und Verbrauchswerte.",
+          "calorific_value": "Fichte W20 ≈ 4,0, W30 ≈ 3,4, W40 ≈ 2,8 kWh/kg",
+          "bulk_density": "Fichte W30 ≈ 200–230, Buche W30 ≈ 300–340 kg/SRM"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "boiler_temperature": { "name": "Kesseltemperatur" },
+      "boiler_temperature_target": { "name": "Kessel-Solltemperatur" },
+      "flue_gas_temperature": { "name": "Rauchgastemperatur" },
+      "oxygen": { "name": "Restsauerstoff" },
+      "oxygen_target": { "name": "Restsauerstoff Soll" },
+      "output": { "name": "Leistung" },
+      "draft_fan": { "name": "Saugzug" },
+      "draft_fan_target": { "name": "Saugzug Soll" },
+      "feed_target": { "name": "Einschub Soll" },
+      "negative_pressure": { "name": "Unterdruck Brennraum" },
+      "return_temperature": { "name": "Rücklauftemperatur" },
+      "return_temperature_target": { "name": "Rücklauf-Solltemperatur" },
+      "current_feed": { "name": "Strom Einschub" },
+      "current_room_discharge": { "name": "Strom Raumaustragung" },
+      "current_ash_discharge": { "name": "Strom Ascheaustragung" },
+      "current_sliding_grate": { "name": "Strom Schieberost" },
+      "current_cleaning": { "name": "Strom Reinigung" },
+      "outdoor_temperature": { "name": "Außentemperatur" },
+      "outdoor_temperature_average": { "name": "Außentemperatur gemittelt" },
+      "buffer_top": { "name": "Puffer oben" },
+      "buffer_upper_middle": { "name": "Puffer Mitte oben" },
+      "buffer_middle": { "name": "Puffer Mitte" },
+      "buffer_lower_middle": { "name": "Puffer Mitte unten" },
+      "buffer_bottom": { "name": "Puffer unten" },
+      "buffer_charge": { "name": "Pufferladezustand" },
+      "flow_temperature": { "name": "Vorlauftemperatur Heizkreis {number}" },
+      "flow_temperature_target": { "name": "Vorlauf-Solltemperatur Heizkreis {number}" },
+      "dhw_temperature": { "name": "Warmwassertemperatur {number}" },
+      "dhw_temperature_target": { "name": "Warmwasser-Solltemperatur {number}" },
+      "boiler_state": {
+        "name": "Kesselzustand",
+        "state": {
+          "off": "Aus",
+          "preparing_start": "Startvorbereitung",
+          "boiler_start": "Kessel Start",
+          "ignition_monitoring": "Zündüberwachung",
+          "ignition": "Zündung",
+          "transition_full_firing": "Übergang Leistungsbrand",
+          "full_firing": "Leistungsbrand",
+          "ember_preservation": "Gluterhaltung",
+          "waiting_ash_removal": "Warten auf Entaschung",
+          "ash_removal": "Entaschung",
+          "cleaning": "Putzen",
+          "other": "Sonstiger Zustand"
+        }
+      },
+      "fault_message": { "name": "Störung" },
+      "heat_energy": { "name": "Erzeugte Wärme" },
+      "fuel_consumed": { "name": "Hackgutverbrauch" },
+      "fuel_consumed_srm": { "name": "Hackgutverbrauch (SRM)" },
+      "fuel_today": { "name": "Hackgutverbrauch heute" },
+      "fuel_daily_average": { "name": "Hackgutverbrauch Tagesmittel" },
+      "storage_kg": { "name": "Lagerstand (kg)" },
+      "storage_srm": { "name": "Lagerstand (SRM)" },
+      "days_remaining": { "name": "Reichweite Lager" },
+      "frames_received": { "name": "Empfangene Datensätze" }
+    },
+    "binary_sensor": {
+      "fault": { "name": "Störmeldung" },
+      "safety_limiter": { "name": "Sicherheitstemperaturbegrenzer" },
+      "boiler_contact": { "name": "Kesselkontakt" },
+      "circuit_pump": { "name": "Heizkreispumpe {number}" },
+      "dhw_pump": { "name": "Boilerladepumpe {number}" },
+      "return_pump": { "name": "Rücklaufpumpe" },
+      "local_connection": { "name": "Lokale Verbindung" },
+      "burning": { "name": "Brenner aktiv" },
+      "fault_active": { "name": "Störung aktiv" },
+      "cloud_connection": { "name": "Cloud-Verbindung" }
+    },
+    "number": {
+      "storage_level": { "name": "Lagerstand" },
+      "room_temperature_day": { "name": "Raumtemperatur Tag" },
+      "room_temperature_night": { "name": "Raumtemperatur Nacht" },
+      "deactivation_limit_heating": { "name": "Heizgrenze Heizbetrieb" },
+      "deactivation_limit_reduction_day": { "name": "Heizgrenze Absenkung Tag" },
+      "deactivation_limit_reduction_night": { "name": "Heizgrenze Absenkung Nacht" },
+      "heating_curve_steepness": { "name": "Heizkurve Steilheit" }
+    },
+    "select": {
+      "circuit_mode": {
+        "name": "Betriebsart",
+        "state": {
+          "mode_off": "Aus",
+          "mode_automatic": "Automatik",
+          "mode_heating": "Heizen",
+          "mode_reduction": "Absenken",
+          "mode_bridge_reduction": "Überbrückung Absenken",
+          "mode_bridge_heating": "Überbrückung Heizen"
+        }
+      },
+      "pool_heating": {
+        "name": "Poolheizung",
+        "state": {
+          "pool_heating_off": "Aus",
+          "pool_heating_on": "Ein",
+          "pool_heating_automatic": "Automatik"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "entry_not_loaded": { "message": "Dieser Hargassner-HK-Eintrag ist nicht geladen." }
+  },
+  "services": {
+    "refill": {
+      "name": "Hackgut geliefert",
+      "description": "Addiert eine Lieferung zum Lagerstand.",
+      "fields": {
+        "config_entry_id": { "name": "Kessel", "description": "Kessel, dessen Lager befüllt wurde." },
+        "amount": { "name": "Menge", "description": "Gelieferte Menge in SRM." }
+      }
+    },
+    "set_storage": {
+      "name": "Lagerstand setzen",
+      "description": "Setzt den Lagerstand, z. B. nach dem Ausmessen.",
+      "fields": {
+        "config_entry_id": { "name": "Kessel", "description": "Gemeinter Kessel." },
+        "amount": { "name": "Lagerstand", "description": "Aktueller Lagerstand in SRM." }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+refill:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: hargassner_hk
+    amount:
+      required: true
+      example: 30
+      selector:
+        number:
+          min: 0
+          max: 1000
+          step: 0.5
+          unit_of_measurement: SRM
+          mode: box
+
+set_storage:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: hargassner_hk
+    amount:
+      required: true
+      example: 45
+      selector:
+        number:
+          min: 0
+          max: 1000
+          step: 0.5
+          unit_of_measurement: SRM
+          mode: box
