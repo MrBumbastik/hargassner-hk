@@ -15,7 +15,7 @@ Jeder Schritt ist ein eigener Commit. Nach Abbruch: `git log --oneline` und dies
 
 - [x] 0. Ausgangsstand committen
 - [x] 1. Bekannte Cloud-Parameter: `program` (Select), `boiler_temperature_target`, `room_temperature_correction`, `steepness_floor` (Number) mit Übersetzungen; Tests
-- [ ] 2. Button-Plattform für Cloud-Aktionen (`force_charging`, `one_time_circulation`); Tests
+- [x] 2. Button-Plattform für Cloud-Aktionen (`force_charging`, `one_time_circulation`); Tests
 - [ ] 3. Nennleistung aus Gerätetyp ableiten ("Eco-HK 50" → 50 kW) im Config-Flow als Vorgabe; Tests
 - [ ] 4. README aktualisieren (Cloud-Erkenntnisse, `efficiency` = Leistung)
 - [ ] 5. (später, nach lokalem Test) Cloud-Leistung als Ersatz für Verbrauchsberechnung

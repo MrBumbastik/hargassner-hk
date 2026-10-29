@@ -144,6 +144,11 @@ class CloudCoordinator(DataUpdateCoordinator[CloudData]):
                 "name": values.get("name") or widget_type.replace("_", " ").title(),
                 "values": values,
                 "parameters": {k: v for k, v in parameters.items() if isinstance(v, dict)},
+                "actions": {
+                    k: v["resource"]
+                    for k, v in (widget.get("actions") or {}).items()
+                    if isinstance(v, dict) and v.get("resource")
+                },
             }
         return CloudData(widgets=result, online=bool(meta.get("online_state", True)))
 
@@ -152,4 +157,11 @@ class CloudCoordinator(DataUpdateCoordinator[CloudData]):
             await self.api.set_value(resource, value)
         except CloudError as err:
             raise HomeAssistantError(f"Hargassner cloud rejected the value: {err}") from err
+        await self.async_request_refresh()
+
+    async def async_post_action(self, resource: str) -> None:
+        try:
+            await self.api.post_action(resource)
+        except CloudError as err:
+            raise HomeAssistantError(f"Hargassner cloud rejected the action: {err}") from err
         await self.async_request_refresh()

@@ -150,3 +150,6 @@ class HargassnerCloud:
 
     async def set_value(self, resource: str, value: Any) -> None:
         await self._request("PATCH", resource, {"value": value})
+
+    async def post_action(self, resource: str) -> None:
+        await self._request("POST", resource)

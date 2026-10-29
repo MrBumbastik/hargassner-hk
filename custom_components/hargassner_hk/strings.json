@@ -308,6 +308,17 @@
           "program_stop_firing": "Stop firing"
         }
       }
+    },
+    "button": {
+      "buffer_force_charging": {
+        "name": "Force buffer charging"
+      },
+      "dhw_force_charging": {
+        "name": "Force hot water charging"
+      },
+      "one_time_circulation": {
+        "name": "One-time circulation"
+      }
     }
   },
   "exceptions": {

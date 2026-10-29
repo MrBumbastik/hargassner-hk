@@ -308,6 +308,17 @@
           "program_stop_firing": "Abbrand"
         }
       }
+    },
+    "button": {
+      "buffer_force_charging": {
+        "name": "Puffer zwangsladen"
+      },
+      "dhw_force_charging": {
+        "name": "Warmwasser zwangsladen"
+      },
+      "one_time_circulation": {
+        "name": "Zirkulation einmalig"
+      }
     }
   },
   "exceptions": {

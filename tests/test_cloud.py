@@ -87,7 +87,7 @@ def cloud_api():
             AsyncMock(return_value=(WIDGETS, {"online_state": True})),
         ),
         patch("custom_components.hargassner_hk.cloud.HargassnerCloud.set_value", AsyncMock()) as set_value,
-        patch("custom_components.hargassner_hk.cloud.HargassnerCloud.post_action", AsyncMock(), create=True) as post_action,
+        patch("custom_components.hargassner_hk.cloud.HargassnerCloud.post_action", AsyncMock()) as post_action,
     ):
         yield set_value, post_action
 
@@ -141,3 +141,16 @@ async def test_known_cloud_parameters(hass: HomeAssistant, fake_boiler: FakeBoil
 
     await hass.services.async_call("select", "select_option", {"entity_id": program, "option": "program_stop_firing"}, blocking=True)
     set_value.assert_awaited_with(f"{BASE}/heater/parameters/program", "PROGRAM_STOP_FIRING")
+
+
+async def test_action_buttons(hass: HomeAssistant, fake_boiler: FakeBoiler, cloud_api) -> None:
+    _, post_action = cloud_api
+    entry = await _setup(hass, fake_boiler)
+
+    buffer = _cloud_entity(hass, entry, "button", "buffer", "action_force_charging")
+    circulation = _cloud_entity(hass, entry, "button", "boiler_1", "action_one_time_circulation")
+    assert hass.states.get(circulation).name == "Boiler One-time circulation"
+    _cloud_entity(hass, entry, "button", "boiler_1", "action_force_charging")
+
+    await hass.services.async_call("button", "press", {"entity_id": buffer}, blocking=True)
+    post_action.assert_awaited_with(f"{BASE}/buffer/default/actions/force-charging")
