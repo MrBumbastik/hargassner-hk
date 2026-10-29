@@ -80,7 +80,7 @@ class CircuitClimate(CloudEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         if self.hvac_mode == HVACMode.OFF:
             return HVACAction.OFF
-        pump = self.value("pump_active")
+        pump = self.widget_value("pump_active")
         if pump is None:
             return None
         return HVACAction.HEATING if pump else HVACAction.IDLE
@@ -93,7 +93,7 @@ class CircuitClimate(CloudEntity, ClimateEntity):
 
     @property
     def current_temperature(self) -> float | None:
-        return self._float(self.value("room_temperature_current"))
+        return self._float(self.widget_value("room_temperature_current"))
 
     @property
     def target_temperature(self) -> float | None:

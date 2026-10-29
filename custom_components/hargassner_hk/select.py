@@ -13,6 +13,7 @@ PARALLEL_UPDATES = 1
 
 # Parameter key -> translation key. Options are translated as lowercased API values.
 KNOWN_SELECTS = {
+    "program": "heater_program",
     "mode": "circuit_mode",
     "pool_heating": "pool_heating",
 }

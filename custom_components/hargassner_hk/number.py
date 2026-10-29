@@ -32,6 +32,10 @@ KNOWN_NUMBERS: dict[str, CloudNumberMeta] = {
     "deactivation_limit_reduction_day": CloudNumberMeta("deactivation_limit_reduction_day"),
     "deactivation_limit_reduction_night": CloudNumberMeta("deactivation_limit_reduction_night"),
     "steepness": CloudNumberMeta("heating_curve_steepness", temperature=False, mode=NumberMode.SLIDER, icon="mdi:slope-uphill"),
+    # Floor heating circuits use their own key for the curve
+    "steepness_floor": CloudNumberMeta("heating_curve_steepness", temperature=False, mode=NumberMode.SLIDER, icon="mdi:slope-uphill"),
+    "room_temperature_correction": CloudNumberMeta("room_temperature_correction"),
+    "boiler_temperature_target": CloudNumberMeta("dhw_temperature_target", icon="mdi:water-boiler"),
 }
 
 

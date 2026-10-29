@@ -68,7 +68,7 @@ class CloudEntity(CoordinatorEntity[CloudCoordinator]):
         widget = self.widget
         return widget["parameters"].get(key) if widget else None
 
-    def value(self, key: str) -> Any:
+    def widget_value(self, key: str) -> Any:
         widget = self.widget
         return widget["values"].get(key) if widget else None
 
