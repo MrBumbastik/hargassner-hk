@@ -9,6 +9,19 @@ Zeitbedarf: etwa 15 Minuten, davon 5–10 Minuten Warten.
 - eine **SD-Karte**, am besten eine ältere kleine Karte bis 32 GB, formatiert mit **FAT32** (ältere Steuerungen lesen SDXC/exFAT oft nicht),
 - einen PC mit Kartenleser und einem Texteditor (Notepad++, VS Code oder Ähnliches).
 
+## Schnellweg: Export über den Dateimanager
+
+Die Steuerung zeichnet ohnehin laufend DAQ-Dateien auf. Getestet am Eco-HK 50 mit Firmware V30.0HAR.f:
+
+1. SD-Karte (FAT32) am Touch-Tronic einstecken.
+2. **Einstellen → Setup → Dateimanager → DAQ**
+3. Die **neueste Datei** auswählen (höchste Nummer, z. B. `DAQ02788.DAQ`) und **Export** drücken.
+4. Karte entnehmen und weiter mit [Schritt 4: Datei prüfen](#4-datei-prüfen).
+
+Nimm die neueste Datei: Nach einem Firmware-Update ändert sich das Template, ältere Dateien passen dann nicht mehr.
+
+Funktioniert das bei deiner Version nicht, hilft der ausführliche Weg unten.
+
 ## 1. Karte vorbereiten
 
 1. Die Karte am PC als **FAT32** formatieren. Achtung, dabei werden alle Daten auf der Karte gelöscht.
