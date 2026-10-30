@@ -86,3 +86,17 @@ async def test_setup_with_real_template(hass: HomeAssistant, fake_boiler: FakeBo
     assert state("binary_sensor", "d_aa_run").state == "off"
     assert state("binary_sensor", "burning").state == "on"
     assert state("sensor", "fault_message").state == "No fault"
+
+
+def test_template_without_storage_calculation() -> None:
+    """With the boiler's own storage calculation switched off, 'Lagerstand HK' is missing (140 values)."""
+    other = (Path(__file__).parent / "fixtures" / "eco_hk_50_v30.0HAR.f_ohne_lager.xml").read_text(encoding="utf-8")
+    fmt = parse_daq_xml(other)
+    assert fmt.expected_length == 140
+    assert fmt.analog_by_name("Lagerstand HK") is None
+    # A line from one variant must be rejected by the other
+    from datetime import datetime, timezone
+
+    from custom_components.hargassner_hk.daq import decode_frame
+
+    assert decode_frame(fmt, _line(), datetime.now(timezone.utc)) is None
