@@ -23,6 +23,10 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 
 ## P2: während und nach dem ersten Test
 
+- [x] **Installation in echtem HA (30.10., v0.4.0):** über HACS, Template-Feld leer → automatisch erkannt, 0 abgelehnte Datensätze. Parallel läuft eine zweite Telnet-Integration am selben Kessel → **mehrere Telnet-Verbindungen sind möglich**.
+- [ ] **Vergleich mit anderer Telnet-Integration:** Kesselzustand/-temperatur gleich; Rauchgas, Puffer oben und Außentemperatur weichen dort ab (unsere Werte sind gegen die Cloud geprüft). Nutzer entscheidet über Umstellung von Dashboards (Verlauf beachten).
+- [ ] **Nennleistung ohne Cloud:** Ohne Cloud-Login bleibt der Standard 30 kW. Modell aus dem Template ableiten (z. B. Kopfzeile `KT=Eco-HK 50` der DAQ-Datei) oder Hinweis im Optionsdialog.
+
 - [x] **DAQ-Template optional (30.10., v0.4.0):** Geprüfte Templates liegen in `custom_components/hargassner_hk/templates/`. Die Erkennung akzeptiert nur Template plus verifizierte Stromkorrektur und prüft Zustand und Kesseltemperatur auf Plausibilität. Automatisch gewählte Templates folgen Layoutänderungen selbst (3 gleich lange Zeilen nötig). Offen: verwaiste Entität „Lagerstand HK“, wenn die Lagerbestandsberechnung wieder ausgeschaltet wird.
 
 - [x] **Erster Live-Lesetest (30.10.):** Strom erreichbar, 143 Werte statt 140 → Korrektur für 3 zusätzliche Werte (`STREAM_QUIRKS` in `daq.py`), gegen die Cloud verifiziert. Stb, NotAus und SK_* sind Ruhestromkontakte (invertiert). BRT, Wasserdruck und ATÜ liefern Platzhalter (bei Hackgut standardmäßig aus). Echte Zeile als Fixture `tests/fixtures/eco_hk_50_live_line.txt`.
