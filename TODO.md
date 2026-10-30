@@ -13,7 +13,7 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 ## P1: vor dem ersten Test am echten Kessel
 
 - [x] **DAQ-Datei auswerten** (Eco-HK 50, V30.0HAR.f): 133 Analogkanäle und 8 Digitalworte (32 Bit) → 141 Werte pro Zeile. Kanalnamen in `channels.py` zugeordnet, Test-Fixture `tests/fixtures/eco_hk_50_v30.0HAR.f.xml` (nur `<DAQPRJ>`-Block).
-- [ ] **`Lagerstand HK` [m³] der Steuerung nutzen:** Kanal 132, neu seit V30.0HAR.f. Prüfen, ob die Steuerung den Lagerstand selbst führt (Wert am Display vergleichen). Wenn ja, als Quelle für Lagerstand und Reichweite verwenden und das eigene Modell nur noch für Wärme und Verbrauch nutzen.
+- [ ] **`Lagerstand HK` [m³] der Steuerung nutzen:** Kanal 132. Erscheint **nicht durch das Firmware-Update**: DAQ02787 (V30.0HAR.f, 30.10. 0:00) hat ihn noch nicht, DAQ02788 (30.10. ab 7:46, gleiche Firmware) schon. Vermutlich durch eine Einstellung bzw. einen Neustart angelegt. Beim Nutzer nachfragen. Prüfen, ob die Steuerung den Lagerstand selbst führt (Wert am Display vergleichen). Wenn ja, als Quelle für Lagerstand und Reichweite verwenden und das eigene Modell nur noch für Wärme und Verbrauch nutzen.
 - [ ] **Bedeutung unsicherer Kanäle klären:** GBF (Glutbett, Einheit °), PLK/TLK (Luftklappen?), ER/AR Run (Einschub-/Ascherost?), Effizienz. Abgleich mit dem Display bzw. der PARAMLOG des Kessels.
 - [ ] **Cloud-Schreibzugriff absichern:** Option „Werte über die Cloud ändern erlauben“, standardmäßig **aus**. Solange die Integration ungetestet ist, soll sie nicht versehentlich Sollwerte oder das Kesselprogramm ändern.
 - [ ] **Nur eine Telnet-Verbindung:** Prüfen, ob der Touch-Tronic parallele Verbindungen erlaubt. Falls nicht, im Reconfigure-Flow den laufenden Client wiederverwenden, statt eine zweite Verbindung zu öffnen.
@@ -26,7 +26,8 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 - [ ] **Raumtemperatur aus `measurements`:** Das Widget liefert `room_temperature_current = null`, die Messwerte enthalten sie aber. Climate soll den Messwert verwenden.
 - [ ] **Verbrauchsmodell kalibrieren:** Nach der nächsten Hackgut-Lieferung berechnete und tatsächliche Menge vergleichen, die Standardwerte für Heizwert und Schüttdichte prüfen.
 - [ ] **Cloud-Leistung als Ersatz:** Fällt der lokale Datenstrom aus, die Verbrauchsberechnung mit `heater.efficiency` (= Leistung %, 5-Minuten-Raster) weiterführen.
-- [ ] **Reparatur-Hinweis bei Template-Abweichung:** Passt der Datenstrom dauerhaft nicht zum Template (z. B. nach einem Firmware-Update), ein HA-Repair-Issue mit Verweis auf „Neu konfigurieren“ anlegen.
+- [ ] **Reparatur-Hinweis bei Template-Abweichung (wichtig):** Die Kanalliste ändert sich nicht nur bei Firmware-Updates, sondern auch durch Einstellungen am Kessel (belegt: +1 Kanal bei gleicher Firmware). Passt der Datenstrom dauerhaft nicht, ein HA-Repair-Issue mit Verweis auf „Neu konfigurieren“ anlegen und die Anzahl erwarteter und empfangener Werte nennen.
+- [ ] **Betriebsstunden:** Der Kopfteil der DAQ-Datei enthält Zähler (STEUERUNG, HEIZUNG, ZUENDUNG, SAUGZUG, EINSCHUB, AUSTRAG …). Prüfen, ob dieselben Werte im Telnet-Strom stehen (`BSZ_*`-Kanäle). Sonst beim Neu-Einlesen des Templates als Momentaufnahme übernehmen.
 - [ ] **Recorder-Last prüfen:** Wie viele Entitäten sind aktiv, wie groß wird die Datenbank? Gegebenenfalls weitere Kanäle standardmäßig deaktivieren.
 
 ## P3: Qualität und Veröffentlichung

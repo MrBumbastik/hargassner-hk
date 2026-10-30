@@ -18,7 +18,7 @@ Die Steuerung zeichnet ohnehin laufend DAQ-Dateien auf. Getestet am Eco-HK 50 mi
 3. Die **neueste Datei** auswählen (höchste Nummer, z. B. `DAQ02788.DAQ`) und **Export** drücken.
 4. Karte entnehmen und weiter mit [Schritt 4: Datei prüfen](#4-datei-prüfen).
 
-Nimm die neueste Datei: Nach einem Firmware-Update ändert sich das Template, ältere Dateien passen dann nicht mehr.
+Nimm die **neueste** Datei. Die Kanalliste kann sich nach einem Firmware-Update **und auch nach Änderungen an Einstellungen** ändern. Ältere Dateien passen dann nicht mehr.
 
 Funktioniert das bei deiner Version nicht, hilft der ausführliche Weg unten.
 
@@ -62,6 +62,6 @@ Funktioniert das bei deiner Version nicht, hilft der ausführliche Weg unten.
 - **Bei der Einrichtung der Integration:** den Block von `<DAQPRJ>` bis `</DAQPRJ>` kopieren und in das Feld *DAQ-Template* einfügen. Du kannst auch den ganzen Dateiinhalt einfügen, der Block wird automatisch herausgeschnitten.
 - **Als Hilfe für die Entwicklung:** gern den `<DAQPRJ>`-Block in einem [Issue](https://github.com/MrBumbastik/hargassner-hk/issues) posten, zusammen mit Kesselmodell und Firmware-Version. Der Block enthält nur Kanalnamen und Einheiten, keine persönlichen Daten. Die Messdaten danach brauchst du nicht mitzuschicken.
 
-## Nach einem Firmware-Update
+## Nach einem Firmware-Update oder geänderten Einstellungen
 
-Ein Update kann die Kanalliste ändern. Merkst du das (die Integration meldet „Template passt nicht“), die Schritte oben wiederholen und das neue Template unter *Einstellungen → Geräte & Dienste → Hargassner HK → ⋮ → Neu konfigurieren* einfügen.
+Updates und manche Einstellungen am Kessel ändern die Kanalliste. Merkst du das (die Integration meldet „Template passt nicht“), die Schritte oben wiederholen und das neue Template unter *Einstellungen → Geräte & Dienste → Hargassner HK → ⋮ → Neu konfigurieren* einfügen.
