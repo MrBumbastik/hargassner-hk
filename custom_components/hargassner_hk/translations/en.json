@@ -364,7 +364,7 @@
         }
       },
       "pool_heating": {
-        "name": "Pool heating",
+        "name": "Bathroom heating",
         "state": {
           "pool_heating_off": "Off",
           "pool_heating_on": "On",

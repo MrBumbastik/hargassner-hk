@@ -364,7 +364,7 @@
         }
       },
       "pool_heating": {
-        "name": "Poolheizung",
+        "name": "Badheizung",
         "state": {
           "pool_heating_off": "Aus",
           "pool_heating_on": "Ein",

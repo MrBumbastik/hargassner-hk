@@ -15,7 +15,7 @@ PARALLEL_UPDATES = 1
 KNOWN_SELECTS = {
     "program": "heater_program",
     "mode": "circuit_mode",
-    "pool_heating": "pool_heating",
+    "pool_heating": "pool_heating",  # API path …/bathroom-heating: bathroom heating, not a pool
 }
 
 
