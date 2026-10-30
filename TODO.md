@@ -23,6 +23,8 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 
 ## P2: während und nach dem ersten Test
 
+- [ ] **Zustandscodes ZK beim Eco-HK weichen ab (30.10. live):** ZK=5 bei Leistung 81 %, Rauchgas 131 °C, O₂ geregelt auf Soll, Zündheizung (`Z Heiz.`) aus → offensichtlich Leistungsbrand, die Pellet-Tabelle sagt „Zündung“. Vollständige HK-Tabelle durch Mitschreiben der Codes + Display-Text ermitteln, dann holzspezifische Tabelle in `channels.py` und `runtime.py` (Zählung Zündung/Leistungsbrand). Bis dahin zählen „Betriebsstunden Zündung“ und „Leistungsbrand“ falsch.
+
 - [x] **Betriebsstunden (v0.6.0):** pro Komponente sekundengenau aus dem Live-Strom gezählt (`runtime.py`), `total_increasing` → HA-Statistik pro Tag/Woche/Monat. „Zählerstand …“ (Startwert + gezählt, ohne Statistik) für Brenner, Zündung, Saugzug, Raumaustragung; Aktion `set_operating_hours`. Einschub-Zählerstand direkt vom Kessel (`BSZ_ES_PEL`). Offen: echte Laufzeiten im Brennbetrieb gegen Kesseldisplay prüfen.
 
 - [ ] **Raumtemperatur TRA_x ist ohne Raumfühler ein Platzhalter (20,0 °C)**, auch bei nicht vorhandenen Heizkreisen. Sensor standardmäßig deaktivieren oder 20,0 bei fehlendem Fühler als „unbekannt“ melden. Klären, ob ein Fühler-Status existiert (FR_x Zustand?).
