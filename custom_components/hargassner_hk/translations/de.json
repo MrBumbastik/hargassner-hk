@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Hargassner Hackgutkessel",
-        "description": "Verbindung zum lokalen Datenstrom des Touch-Tronic (LAN, Port 23).\n\nDas DAQ-Template beschreibt die Felder deiner Firmware. Aktiviere am Kessel die SD-Aufzeichnung, stecke für ein paar Minuten eine SD-Karte ein, öffne `DAQ00000.DAQ` in einem Texteditor und kopiere den `<DAQPRJ>…</DAQPRJ>`-Block am Anfang (die ganze Datei einfügen geht auch).",
+        "description": "Verbindung zum lokalen Datenstrom des Touch-Tronic (LAN, Port 23).\n\nDas DAQ-Template beschreibt die Felder deines Kessels. Exportiere es auf eine SD-Karte: **Einstellen → Setup → Dateimanager → DAQ**, die neueste Datei wählen und **Export** drücken. Öffne die Datei in einem Texteditor und füge den `DAQPRJ`-Block vom Dateianfang ein (die ganze Datei einfügen geht auch).",
         "data": {
           "name": "Name",
           "host": "IP-Adresse des Kessels",

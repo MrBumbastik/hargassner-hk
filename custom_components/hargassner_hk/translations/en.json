@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Hargassner wood chip boiler",
-        "description": "Connect to the local data stream of the Touch-Tronic (LAN, port 23).\n\nThe DAQ template describes the fields of your firmware. Enable SD logging on the boiler, insert an SD card for a few minutes, open `DAQ00000.DAQ` in a text editor and copy the `<DAQPRJ>…</DAQPRJ>` block at the beginning (pasting the whole file also works).",
+        "description": "Connect to the local data stream of the Touch-Tronic (LAN, port 23).\n\nThe DAQ template describes the fields of your boiler. Export it with an SD card: **Settings → Setup → File manager → DAQ**, choose the newest file and press **Export**. Open the file in a text editor and paste the `DAQPRJ` block from the beginning (pasting the whole file also works).",
         "data": {
           "name": "Name",
           "host": "IP address of the boiler",
