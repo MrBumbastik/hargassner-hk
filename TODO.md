@@ -2,6 +2,17 @@
 
 Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneline` und diese Liste prüfen, beim ersten offenen Punkt der höchsten Priorität weitermachen und danach `pytest` laufen lassen.
 
+## Beta → 1.0 (Stand v0.9.0, 30.10.2026)
+
+Die Integration hat am Eco-HK 50 des Autors die beiden bisherigen Integrationen abgelöst (Dashboards, Energie-Dashboard). Für 1.0 fehlt:
+
+- [ ] **Kaltstart mitschneiden:** Codes für Startvorbereitung, Zündung, Übergang Leistungsbrand (`zk` mit Displaytext). Danach `WOOD_CHIP_STATE_CODES` ergänzen.
+- [ ] **Code 7 = Abbrand am Display bestätigen.**
+- [ ] **Störungscodes Eco-HK prüfen** (`ERRORS_*`, bei der nächsten Störung Code und Displaytext notieren).
+- [ ] **Betriebsstunden gegen das Display prüfen:** Startwerte stammen aus der DAQ-Kopfzeile (30.10. früh) und sind vermutlich 1–2 h zu niedrig; nach einigen Tagen Zuwachs vergleichen.
+- [ ] **1–2 Wochen Dauerbetrieb ohne Auffälligkeiten:** Telnet-Reconnect, HA-/Kesselneustart, Token-Refresh, Hackgut-Bilanz.
+- [ ] Danach Release 1.0.0 und Hinweis „Beta“ im README entfernen.
+
 ## Erledigt (v0.1.0)
 
 - [x] Lokaler DAQ-Datenstrom, Cloud-Steuerung, Verbrauchsmodell, Config-/Options-/Reauth-/Reconfigure-Flow, Diagnose, Übersetzungen de/en
@@ -53,9 +64,10 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 - [ ] **Tests ergänzen:** Cloud-Client (Login, Token-Refresh, 401-Wiederholung), Reauth-, Reconfigure- und Options-Flow, Diagnose, Climate. Ziel: über 90 % Abdeckung, kein Modul unter 80 %.
 - [x] **CI mit GitHub Actions (30.10.):** `hassfest`, HACS-Validierung (`hacs/action`) und `pytest` bei jedem Push auf `main` und bei Pull Requests. Lokal zusätzlich ein Pre-Commit-Hook (Tests und Prüfung auf persönliche Daten).
 - [ ] **Linting:** `ruff` mit Konfiguration einführen und in die CI aufnehmen.
-- [ ] **Lizenz festlegen** (z. B. MIT oder Apache-2.0).
-- [ ] **Releases:** Versionsnummer in `manifest.json`, Git-Tag und GitHub-Release mit Changelog. HACS zeigt Releases als Updates an.
-- [ ] **Brand-Icon:** Logo für die Integrationsliste in HA und HACS (Pull Request an `home-assistant/brands`, Markenrechte von Hargassner beachten).
+- [x] **Lizenz:** Apache-2.0.
+- [x] **Releases (ab v0.9.0):** Versionsnummer in `manifest.json`, Git-Tag und GitHub-Release mit Changelog. HACS zeigt Releases als Updates an; Commits ohne Release erscheinen dort nicht mehr.
+- [x] **Brand-Icon (v0.9.0):** eigenes Motiv (Flamme über Hackschnitzeln), kein Hargassner-Logo. Liegt in `custom_components/hargassner_hk/brand/` (neuere HA-Versionen laden es dort direkt, geprüft mit 2026.10), Quellen in `docs/logo/`.
+- [ ] Optional: Icon zusätzlich an `home-assistant/brands` schicken, damit es auch HACS und ältere HA-Versionen zeigen.
 - [ ] **Config-Entry-Migration vorbereiten:** Entity-IDs hängen an Kanalnamen. Benennt eine neue Firmware Kanäle um, sollen Verläufe über `async_migrate_entry` erhalten bleiben.
 
 ## Später / Ideen

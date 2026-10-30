@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="outer" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#d9381e"/>
+      <stop offset="0.55" stop-color="#f26a1b"/>
+      <stop offset="1" stop-color="#ff9a2e"/>
+    </linearGradient>
+    <linearGradient id="inner" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffb627"/>
+      <stop offset="1" stop-color="#ffe17a"/>
+    </linearGradient>
+  </defs>
+  <!-- flame -->
+  <path fill="url(#outer)" d="M256 18
+     C 282 96, 370 140, 384 238
+     C 396 322, 340 384, 256 384
+     C 172 384, 116 322, 128 246
+     C 136 196, 168 170, 184 128
+     C 200 168, 214 186, 232 196
+     C 228 140, 234 74, 256 18 Z"/>
+  <path fill="url(#inner)" d="M262 168
+     C 278 222, 330 246, 330 302
+     C 330 346, 298 370, 258 370
+     C 218 370, 186 346, 188 304
+     C 190 270, 210 252, 224 230
+     C 232 252, 240 262, 250 266
+     C 246 230, 248 196, 262 168 Z"/>
+  <!-- wood chips -->
+  <g stroke="#5a3418" stroke-width="6" stroke-linejoin="round">
+    <polygon fill="#c98a4b" points="36,470 98,404 196,418 176,486 70,494"/>
+    <polygon fill="#e3b072" points="170,430 262,396 352,424 330,490 196,494"/>
+    <polygon fill="#b3743a" points="330,418 420,402 478,462 444,494 344,492"/>
+    <polygon fill="#d99c5a" points="118,388 196,360 246,392 186,420 108,410"/>
+    <polygon fill="#c4843f" points="276,392 346,362 404,392 352,420 286,416"/>
+  </g>
+  <!-- grain lines -->
+  <g stroke="#8a5428" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.7">
+    <path d="M78 458 L 160 446"/><path d="M212 456 L 310 448"/><path d="M362 452 L 440 458"/>
+  </g>
+</svg>

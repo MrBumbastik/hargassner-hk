@@ -1,11 +1,19 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="custom_components/hargassner_hk/brand/dark_logo.png">
+    <img src="custom_components/hargassner_hk/brand/logo.png" alt="HK Hackgut" height="128">
+  </picture>
+</p>
+
 # Hargassner HK – Home Assistant Integration für Hackgutkessel
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-![Status](https://img.shields.io/badge/Status-Beta%20(1%20Anlage)-yellow.svg)
+![Status](https://img.shields.io/badge/Status-Beta-yellow.svg)
+![Version](https://img.shields.io/badge/Version-0.9.0-blue.svg)
 ![Vibecoded](https://img.shields.io/badge/vibecoded-KI--generiert-blueviolet.svg)
 
 > [!WARNING]
-> **Beta (v0.8.0): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
+> **Beta (v0.9.0): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
 >
 > - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft. Es gibt rund 85 automatische Tests und eine CI (Tests, hassfest, HACS-Prüfung).
 > - **Getestet an einem Eco-HK 50, Firmware V30.0HAR.f:** Lokaler Datenstrom und Cloud laufen dort produktiv und haben die bisherigen Hargassner-Integrationen samt Dashboard und Energie-Dashboard ersetzt. Die Messwerte wurden mit der Hargassner-Cloud abgeglichen. Ein Schreibtest über die Cloud (Warmwasser-Solltemperatur ändern und zurücksetzen) war erfolgreich.
@@ -13,7 +21,7 @@
 > - **Noch nicht verifiziert, auch am Eco-HK 50 nicht:** die Zustandscodes für Startvorbereitung und Zündung (bisher nur „Aus“, „Leistungsbrand“ und „Abbrand“ zugeordnet) sowie die Störungscodes. Die Störungscodes stammen von der Pellet-Steuerung derselben Gerätefamilie.
 > - Die Cloud-Funktionen können **Werte in deinen Kessel schreiben**, zum Beispiel Sollwerte, Betriebsarten und das Kesselprogramm. Das ist **standardmäßig gesperrt** und muss in den Optionen ausdrücklich erlaubt werden („Werte über die Cloud ändern erlauben“). Die Verantwortung liegt bei dir.
 >
-> Rückmeldungen von weiteren Anlagen sind sehr willkommen, vor allem Diagnosedaten und Zustandscodes mit dem zugehörigen Displaytext.
+> Was bis zur Version 1.0 noch fehlt, steht unter [Weg zu Version 1.0](#weg-zu-version-10). Rückmeldungen von weiteren Anlagen sind sehr willkommen, vor allem Diagnosedaten und Zustandscodes mit dem zugehörigen Displaytext.
 
 > **English:** Unofficial Home Assistant integration for Hargassner wood chip boilers (Eco-HK). **Beta, vibecoded (AI-generated).** In daily use on one Eco-HK 50 (firmware V30.0HAR.f), values cross-checked against the Hargassner cloud; other models/firmwares are untested. Use at your own risk; bug reports welcome.
 
@@ -151,6 +159,18 @@ Geprüft an einem Eco-HK 50 mit Firmware V30.0HAR.f:
 - Die Kanalnamen im Eco-HK-Template können von den hier hinterlegten abweichen. Solche Kanäle erscheinen trotzdem, nur mit ihrem Template-Namen. Für die Ergänzung in `channels.py` helfen die **Diagnosedaten** (Gerät → ⋮ → Diagnose herunterladen); E-Mail und Passwort sind darin geschwärzt.
 - Der Touch-Tronic erlaubt eventuell nur **eine** Telnet-Verbindung gleichzeitig. Andere Tools, die Port 23 nutzen, solange parallel nicht verwenden.
 
+## Weg zu Version 1.0
+
+Die Beta läuft seit Oktober 2026 an einem Eco-HK 50. Version 1.0 gibt es, wenn diese Punkte erledigt sind:
+
+- [ ] **Kaltstart mitschneiden:** Die Zustandscodes für Startvorbereitung, Zündung und Übergang zum Leistungsbrand sind noch unbekannt. Bis dahin zeigt der Kesselzustand in dieser Phase „Sonstiger Zustand“ (Code als Attribut). *Brenner aktiv* stimmt trotzdem, weil es am Feuerungs-Bit hängt.
+- [ ] **„Abbrand“ (Code 7) am Display bestätigen:** bisher nur aus einem Mitschnitt abgeleitet.
+- [ ] **Störungscodes prüfen:** Die Texte stammen von der Pellet-Steuerung. Unbekannte Störungen erscheinen als „Störung &lt;Nr&gt;“, werden also trotzdem gemeldet.
+- [ ] **Betriebsstunden mit dem Display abgleichen:** gezählte Laufzeiten gegen die Zähler am Touch-Tronic prüfen, nach einigen Tagen Brennbetrieb.
+- [ ] **Ein bis zwei Wochen Dauerbetrieb:** Verbindungsabbrüche, Neustarts von HA und Kessel, Cloud-Token-Erneuerung, Hackgut-Bilanz über mehrere Tage.
+
+Weitere geplante Verbesserungen stehen in der [Roadmap](TODO.md).
+
 ## Mithelfen
 
 Am meisten helfen Rückmeldungen von echten Anlagen. Bitte ein [Issue](https://github.com/MrBumbastik/hargassner-hk/issues) öffnen mit:
@@ -159,6 +179,8 @@ Am meisten helfen Rückmeldungen von echten Anlagen. Bitte ein [Issue](https://g
 - gern dem `<DAQPRJ>`-Block deiner DAQ-Datei.
 
 Auf der [Roadmap](TODO.md) steht, was als Nächstes geplant ist.
+
+Das Logo (Flamme über Hackschnitzeln) ist eigens für dieses Projekt entworfen und kein Hargassner-Markenzeichen. Die Quellen liegen in [`docs/logo/`](docs/logo/).
 
 ## Entwicklung
 
