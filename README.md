@@ -75,6 +75,8 @@ Hackgut [kg] = Wärme ÷ (Heizwert × Wirkungsgrad)
 Hackgut [SRM] = kg ÷ Schüttdichte
 ```
 
+Beim Hackgutkessel zählt die Leistung nur im Leistungsbrand oder solange Brennstoff gefördert wird: Im **Abbrand** meldet der Eco-HK „Leistung 100 %“, obwohl nichts mehr nachgefördert wird und das Rauchgas schon Luft ist.
+
 Die Werte sind Schätzungen. **Kalibrieren:** Setze nach einer Lieferung den Lagerstand. Ist das Lager früher leer als berechnet, senke den Heizwert, ist es später leer, erhöhe ihn.
 
 ## Lagerstand pflegen
@@ -106,7 +108,8 @@ actions:
 ## Entitäten
 
 - **Sensoren:** alle Analogkanäle des Templates. Bekannte Kanäle (TK, TRG, O2, SZist, Leistung, Puffer, Vorläufe …) haben deutsche Namen. Motorströme und unbekannte Kanäle ohne °C-Einheit sind standardmäßig deaktiviert, du kannst sie bei Bedarf aktivieren.
-- **Kesselzustand** mit dem Rohcode als Attribut. Beim Eco-HK sind bisher „Aus“ (1) und „Leistungsbrand“ (5) am Display bestätigt; andere Codes erscheinen als „Sonstiger Zustand“, bis sie zugeordnet sind (bitte melden: Code + Displaytext).
+- **Kesselzustand** mit dem Rohcode als Attribut. Beim Eco-HK: „Aus“ (1) und „Leistungsbrand“ (5) am Display bestätigt, „Abbrand“ (7) aus einem Mitschnitt abgeleitet (Förderung aus, Restsauerstoff steigt auf Luftwert, danach „Aus“). Andere Codes erscheinen als „Sonstiger Zustand“, bis sie zugeordnet sind (bitte melden: Code + Displaytext).
+- **Brenner aktiv** (und Brenner-Betriebsstunden) folgt beim Hackgutkessel dem kesseleigenen Bit „Feuerung aktiv (F2)“, dazu Leistungsbrand oder Zündheizung.
 - **Betriebsstunden** je Komponente (Brenner, Zündung, Saugzug, Einschub, Austragungen, Roste, Putzmotor, Pumpen) mit Statistik pro Tag/Woche/Monat; Zählerstände für den Abgleich mit dem Kesseldisplay (Aktion `hargassner_hk.set_operating_hours`).
 - **Störung** als Text mit Code, dazu der Binärsensor *Störung aktiv*.
 - **Binärsensoren:** Digitalkanäle wie Pumpen und Störmeldung, *Brenner aktiv*, lokale Verbindung und Cloud-Verbindung.
@@ -133,7 +136,7 @@ Geprüft an einem Eco-HK 50 mit Firmware V30.0HAR.f:
 - **Erster Live-Test bestanden (Eco-HK 50, V30.0HAR.f):** Der Datenstrom wird gelesen, die Werte stimmen mit der Cloud überein. Der Strom enthält bei dieser Firmware **3 Werte mehr**, als das DAQ-Template beschreibt. Die Integration erkennt das und korrigiert es automatisch. Bei anderen Modellen oder Firmwares kann eine ähnliche Abweichung auftreten. Dann meldet die Einrichtung „Template passt nicht“. Bitte als Issue melden, mit der Wertanzahl aus der Fehlermeldung.
 - Auf Hackgutkesseln sind `Stb`, `NotAus` und die Sicherheitsschalter `SK_*` Ruhestromkontakte: Bit gesetzt heißt „alles in Ordnung“. Die Integration invertiert sie.
 
-- Die Zustands- und Störungscodes stammen aus der Pellet-Firmware (Nano-PK) derselben Steuerungsfamilie. **Für den Eco-HK sind sie nicht verifiziert.** Unbekannte Zustände erscheinen als „Sonstiger Zustand“ und unbekannte Störungen als „Störung &lt;Nr&gt;“, jeweils mit dem Code als Attribut. Bitte melde fehlende Codes.
+- Die **Störungscodes** stammen aus der Pellet-Firmware (Nano-PK) derselben Steuerungsfamilie und sind **für den Eco-HK nicht verifiziert**; die Zustandscodes des Eco-HK sind teilweise zugeordnet (siehe oben). Unbekannte Zustände erscheinen als „Sonstiger Zustand“ und unbekannte Störungen als „Störung &lt;Nr&gt;“, jeweils mit dem Code als Attribut. Bitte melde fehlende Codes.
 - Die Kanalnamen im Eco-HK-Template können von den hier hinterlegten abweichen. Solche Kanäle erscheinen trotzdem, nur mit ihrem Template-Namen. Für die Ergänzung in `channels.py` helfen die **Diagnosedaten** (Gerät → ⋮ → Diagnose herunterladen); E-Mail und Passwort sind darin geschwärzt.
 - Der Touch-Tronic erlaubt eventuell nur **eine** Telnet-Verbindung gleichzeitig. Andere Tools, die Port 23 nutzen, solange parallel nicht verwenden.
 

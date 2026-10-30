@@ -17,7 +17,7 @@ from .cloud import CloudAuthError, CloudError, HargassnerCloud
 from .const import CONF_ALLOW_CLOUD_WRITE, DEFAULT_ALLOW_CLOUD_WRITE, DOMAIN, FRAME_STALE_AFTER
 from .daq import Frame
 from .fuel import FuelTracker
-from .runtime import RuntimeTracker
+from .runtime import RuntimeTracker, effective_output, is_wood_chip
 from .telnet import HargassnerTelnet
 
 if TYPE_CHECKING:
@@ -75,6 +75,7 @@ class LocalCoordinator(DataUpdateCoordinator[Frame]):
         self._runtime_store = runtime_storage
         self._last_save = time.monotonic()
         self._fuel_changed = False
+        self._wood_chip = is_wood_chip({ch.key for ch in client.fmt.digital})
 
     def save_fuel(self) -> None:
         # Store.async_delay_save re-arms its timer on every call, so calling it each
@@ -106,8 +107,8 @@ class LocalCoordinator(DataUpdateCoordinator[Frame]):
                 )
             raise UpdateFailed(f"No current data from boiler: {reason}")
 
-        power = frame.analog.get(self.power_key) if self.power_key else None
-        if self.fuel.add_sample(power if isinstance(power, float) else None, now):
+        power = effective_output(frame, self.power_key, self._wood_chip) if self.power_key else None
+        if self.fuel.add_sample(power, now):
             self._fuel_changed = True
         self.save_fuel()  # throttled to once a minute; writes only what changed
         return frame

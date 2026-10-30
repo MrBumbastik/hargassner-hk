@@ -27,7 +27,7 @@ def _line() -> str:
         analog[fmt.analog_by_name(name).index] = str(value)
     words = [0] * fmt.digital_count
     for ch in fmt.digital:
-        if ch.name in ("ES Run", "RA Run", "HKP1"):
+        if ch.name in ("ES Run", "RA Run", "HKP1", "Feuerung aktiv (F2)"):  # F2 is set while firing
             words[ch.word] |= 1 << ch.bit
     return "pm " + " ".join(analog + [f"{w:08X}" for w in words])
 
@@ -241,7 +241,8 @@ def test_wood_chip_state_table() -> None:
 
     assert boiler_state(5, wood_chip=True) == "full_firing"  # display: Leistungsbrand
     assert boiler_state(1, wood_chip=True) == "off"
-    assert boiler_state(7, wood_chip=True) == "other"  # unconfirmed on the Eco-HK
+    assert boiler_state(7, wood_chip=True) == "burnout"  # recorded 30.10.: feed off, O2 -> air, then off
+    assert boiler_state(3, wood_chip=True) == "other"  # not seen on the Eco-HK yet
     assert boiler_state(5, wood_chip=False) == "ignition"  # pellet table unchanged
 
 

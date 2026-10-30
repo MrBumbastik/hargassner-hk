@@ -30,7 +30,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 
-from .const import WOOD_CHIP_MARKERS, WOOD_CHIP_STATE_CODES
+from .const import WOOD_CHIP_STATE_CODES
 
 
 @dataclass(frozen=True)
@@ -136,9 +136,8 @@ WOOD_CHIP_DISABLED = {"brt", "wasserdruck", "atue"}
 WOOD_CHIP_INVERTED = {"stb", "notaus"}
 
 
-def is_wood_chip(digital_keys: set[str]) -> bool:
-    """Wood chip templates have room discharge and grate drives."""
-    return WOOD_CHIP_MARKERS <= digital_keys
+# Single detection rule, shared with the fuel model and the operating hours
+from .runtime import is_wood_chip  # noqa: E402
 
 
 def analog_meta(key: str, unit: str | None, wood_chip: bool = False) -> SensorMeta:
@@ -260,11 +259,12 @@ BOILER_STATES: dict[int, str] = {
     12: "cleaning",
 }
 BOILER_STATE_OTHER = "other"
-BOILER_STATE_OPTIONS = [*dict.fromkeys(BOILER_STATES.values()), BOILER_STATE_OTHER]
+BOILER_STATE_OPTIONS = [*dict.fromkeys([*BOILER_STATES.values(), *WOOD_CHIP_STATE_CODES.values()]), BOILER_STATE_OTHER]
 BURNING_STATES = {"ignition", "transition_full_firing", "full_firing"}
 
-# Wood chip boilers (Eco-HK) use other codes. Only codes confirmed on the boiler display
-# are listed; everything else shows as "other" with the raw code, never a guessed name.
+# Wood chip boilers (Eco-HK) use other codes. Only codes backed by evidence are listed
+# (see const.WOOD_CHIP_STATE_CODES: 5 confirmed on the display, 7 derived from a
+# recording); everything else shows as "other" with the raw code, never a guessed name.
 # Verified on an Eco-HK 50 (V30.0HAR.f): 1 = Aus, 5 = Leistungsbrand (output 81 %, O2 regulated).
 BOILER_STATES_WOOD_CHIP: dict[int, str] = dict(WOOD_CHIP_STATE_CODES)
 

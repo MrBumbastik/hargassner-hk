@@ -202,7 +202,8 @@
           "waiting_ash_removal": "Warten auf Entaschung",
           "ash_removal": "Entaschung",
           "cleaning": "Putzen",
-          "other": "Sonstiger Zustand"
+          "other": "Sonstiger Zustand",
+          "burnout": "Abbrand"
         }
       },
       "fault_message": {

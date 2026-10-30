@@ -202,7 +202,8 @@
           "waiting_ash_removal": "Waiting for ash removal",
           "ash_removal": "Ash removal",
           "cleaning": "Cleaning",
-          "other": "Other"
+          "other": "Other",
+          "burnout": "Burn-out"
         }
       },
       "fault_message": {

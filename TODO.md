@@ -23,7 +23,7 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 
 ## P2: während und nach dem ersten Test
 
-- [~] **Zustandscodes ZK beim Eco-HK (v0.7.0):** bestätigt 1 = Aus, 5 = Leistungsbrand (Display). Weitere Codes erscheinen als „Sonstiger Zustand“ mit Rohcode, bis sie am Display abgelesen sind. Zündung zählt über `Z Heiz.`, Brenner = Code 5 oder Zündheizung oder Leistung > 0. Ursprünglicher Befund: ZK=5 bei Leistung 81 %, Rauchgas 131 °C, O₂ geregelt auf Soll, Zündheizung (`Z Heiz.`) aus → offensichtlich Leistungsbrand, die Pellet-Tabelle sagt „Zündung“. Vollständige HK-Tabelle durch Mitschreiben der Codes + Display-Text ermitteln, dann holzspezifische Tabelle in `channels.py` und `runtime.py` (Zählung Zündung/Leistungsbrand). Bis dahin zählen „Betriebsstunden Zündung“ und „Leistungsbrand“ falsch.
+- [~] **Zustandscodes ZK beim Eco-HK (v0.8.0):** 1 = Aus, 5 = Leistungsbrand (Display bestätigt), 7 = Abbrand (Mitschnitt 30.10. 18:02–20:01, `~/hargassner-daq/zk_log.csv`: Förderung 0, O₂ → 20 %, F2 fällt, dann Code 1; Displaytext noch bestätigen). Brenner aktiv = F2-Bit oder Code 5 oder Zündheizung. Wärme/Hackgut zählen Leistung nur bei Code 5 oder Förderung > 0 (Leistung meldet im Abbrand 100 %). Offen: Codes für Zündung/Start (Brennstart mitschneiden), Displaytexte.
 
 - [x] **Betriebsstunden (v0.6.0):** pro Komponente sekundengenau aus dem Live-Strom gezählt (`runtime.py`), `total_increasing` → HA-Statistik pro Tag/Woche/Monat. „Zählerstand …“ (Startwert + gezählt, ohne Statistik) für Brenner, Zündung, Saugzug, Raumaustragung; Aktion `set_operating_hours`. Einschub-Zählerstand direkt vom Kessel (`BSZ_ES_PEL`). Offen: echte Laufzeiten im Brennbetrieb gegen Kesseldisplay prüfen.
 

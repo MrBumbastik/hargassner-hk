@@ -16,8 +16,9 @@ import time
 from typing import Any
 
 from .const import (
+    KEY_FEED,
+    KEY_FIRING_ACTIVE,
     KEY_IGNITION_HEATER,
-    KEY_OUTPUT,
     KEY_STATE,
     WOOD_CHIP_FULL_FIRING,
     WOOD_CHIP_MARKERS,
@@ -81,23 +82,47 @@ COUNTERS: tuple[Counter, ...] = (
 PROFILE_WOOD_CHIP = "wood_chip_v1"
 
 
+_full_firing = _state_in(set(WOOD_CHIP_FULL_FIRING))
+_feeding = _positive(KEY_FEED)
+
+
 def wood_chip_burning(frame: Frame) -> bool:
     """Burner active on a wood chip boiler. Single rule for the entity and the hours.
 
-    Full firing (confirmed code), ignition heater on, or any output: catches transition
-    phases whose codes are not confirmed yet.
+    Full firing (confirmed code 5), ignition heater, or the boiler's own "firing active"
+    bit (F2; set during ignition, full firing and the first part of burn-out). Without
+    the F2 channel: actual fuel feed instead. Output % is no indicator: it reads 100 %
+    during burn-out (recorded 30.10.).
     """
-    output = frame.analog.get(KEY_OUTPUT)
-    return (
-        _state_in(set(WOOD_CHIP_FULL_FIRING))(frame)
-        or bool(frame.digital.get(KEY_IGNITION_HEATER))
-        or (isinstance(output, float) and output > 0)
-    )
+    if _full_firing(frame) or frame.digital.get(KEY_IGNITION_HEATER):
+        return True
+    if KEY_FIRING_ACTIVE in frame.digital:
+        return bool(frame.digital[KEY_FIRING_ACTIVE])
+    return _feeding(frame)
+
+
+def effective_output(frame: Frame, power_key: str, wood_chip: bool) -> float | None:
+    """Output % for the heat/fuel model (the single 'heat output' rule).
+
+    Wood chip boilers report output 100 % during burn-out while no fuel is fed and the
+    flue gas is already air. Count output only in full firing or while fuel is fed;
+    templates without a feed channel fall back to the firing bit, then to raw output.
+    """
+    output = frame.analog.get(power_key)
+    if not isinstance(output, float):
+        return None
+    if not wood_chip or _full_firing(frame):
+        return output
+    if KEY_FEED in frame.analog:
+        return output if _feeding(frame) else 0.0
+    if KEY_FIRING_ACTIVE in frame.digital:
+        return output if frame.digital[KEY_FIRING_ACTIVE] else 0.0
+    return output
 
 
 WOOD_CHIP_COUNTERS: dict[str, Counter] = {
     "burner": Counter("burner", f"a:{KEY_STATE}", wood_chip_burning, True),
-    "full_firing": Counter("full_firing", f"a:{KEY_STATE}", _state_in(set(WOOD_CHIP_FULL_FIRING))),
+    "full_firing": Counter("full_firing", f"a:{KEY_STATE}", _full_firing),
     "ignition": Counter("ignition", f"d:{KEY_IGNITION_HEATER}", _bit(KEY_IGNITION_HEATER), True),
 }
 # Counted with the pellet table before the wood chip profile existed -> reset once

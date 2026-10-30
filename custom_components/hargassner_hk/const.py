@@ -59,10 +59,14 @@ CHANNEL_STATE = "ZK"
 # Wood chip boilers (Eco-HK). Shared by channels.py (entities) and runtime.py (hours).
 WOOD_CHIP_MARKERS = frozenset({"ra_run", "er_run", "ar_run"})  # room discharge + grate drives
 KEY_STATE = "zk"
-KEY_OUTPUT = "leistung"
 KEY_IGNITION_HEATER = "z_heiz"
-# Only codes confirmed on the display of an Eco-HK 50 (V30.0HAR.f); others show as "other".
-WOOD_CHIP_STATE_CODES = {1: "off", 5: "full_firing"}
+KEY_FIRING_ACTIVE = "feuerung_aktiv_f2"  # boiler's own "firing active" bit
+KEY_FEED = "foerder"  # fuel feed rate %
+# Codes seen on an Eco-HK 50 (V30.0HAR.f); others show as "other".
+#  5: confirmed on the display (output 81 %, O2 regulated to setpoint)
+#  7: recorded 30.10.: feed stops, O2 rises to air (20 %), firing bit drops, then code 1
+#     -> burn-out of the remaining fuel. The boiler reports output 100 % meanwhile!
+WOOD_CHIP_STATE_CODES = {1: "off", 5: "full_firing", 7: "burnout"}
 WOOD_CHIP_FULL_FIRING = frozenset(code for code, key in WOOD_CHIP_STATE_CODES.items() if key == "full_firing")
 CHANNEL_ERROR = "Störungs Nr"
 

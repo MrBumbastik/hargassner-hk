@@ -179,8 +179,10 @@ def test_wood_chip_burner_rule_and_migration() -> None:
 
     assert wood_chip_burning(frame(zk=5))  # confirmed full firing
     assert wood_chip_burning(frame(zk=4, z_heiz=True))  # ignition heater, unknown code
-    out = Frame(analog={"zk": 6.0, "leistung": 30.0}, digital={}, received=datetime.now(timezone.utc))
-    assert wood_chip_burning(out)  # unconfirmed transition code, but output > 0
+    fed = Frame(analog={"zk": 6.0, "foerder": 30.0}, digital={}, received=datetime.now(timezone.utc))
+    assert wood_chip_burning(fed)  # unconfirmed code, but fuel is fed
+    burnout = Frame(analog={"zk": 7.0, "leistung": 100.0, "foerder": 0.0}, digital={}, received=datetime.now(timezone.utc))
+    assert not wood_chip_burning(burnout)  # output reads 100 % during burn-out: no indicator
     assert not wood_chip_burning(frame(zk=1))
     # Hours counted with the pellet table before the profile existed are reset once
     old = {"seconds": {"ignition": 1800.0, "full_firing": 5.0, "burner": 3600.0}, "offsets": {"ignition": 9.0}}
@@ -190,3 +192,61 @@ def test_wood_chip_burner_rule_and_migration() -> None:
     again = RuntimeTracker(COUNTERS, {**rt.as_dict(), "seconds": {**rt.as_dict()["seconds"], "ignition": 60.0}},
                            profile=PROFILE_WOOD_CHIP)
     assert again.seconds["ignition"] == 60  # only once
+
+
+# Real values from the 30.10. recording of an Eco-HK 50 (zk, leistung, foerder, o2, F2 bit)
+RECORDED = [
+    ("full firing", 5, 79, 68, 8.1, True),
+    ("burn-out, still feeding", 7, 83, 68, 8.7, True),
+    ("burn-out, no feed, flue gas = air", 7, 100, 0, 20.0, True),
+    ("burn-out, firing bit cleared", 7, 100, 0, 20.2, False),
+    ("off", 1, 0, 0, 20.2, False),
+]
+
+
+def _recorded(zk, out, feed, o2, f2) -> Frame:
+    return Frame(
+        analog={"zk": float(zk), "leistung": float(out), "foerder": float(feed), "o2": o2},
+        digital={"feuerung_aktiv_f2": f2, "z_heiz": False},
+        received=datetime.now(timezone.utc),
+    )
+
+
+@pytest.mark.parametrize(("label", "zk", "out", "feed", "o2", "f2"), RECORDED)
+def test_burnout_does_not_count_as_heat(label, zk, out, feed, o2, f2) -> None:
+    """The boiler reports output 100 % during burn-out; no fuel is fed, so no heat may be counted."""
+    from custom_components.hargassner_hk.runtime import effective_output, wood_chip_burning
+
+    frame = _recorded(zk, out, feed, o2, f2)
+    expected = float(out) if (zk == 5 or feed > 0) else 0.0
+    assert effective_output(frame, "leistung", wood_chip=True) == expected, label
+    assert effective_output(frame, "leistung", wood_chip=False) == float(out), label  # pellet: unchanged
+    assert wood_chip_burning(frame) is f2, label  # burner active = boiler's own firing bit
+
+
+def test_burnout_state_is_named() -> None:
+    from custom_components.hargassner_hk.channels import BOILER_STATE_OPTIONS, BOILER_STATES_WOOD_CHIP
+
+    assert BOILER_STATES_WOOD_CHIP[7] == "burnout"
+    assert "burnout" in BOILER_STATE_OPTIONS
+
+
+def test_full_firing_counts_even_without_firing_bit() -> None:
+    from custom_components.hargassner_hk.runtime import effective_output, wood_chip_burning
+
+    f = Frame(analog={"zk": 5.0, "leistung": 81.0, "foerder": 68.0},
+              digital={"feuerung_aktiv_f2": False}, received=datetime.now(timezone.utc))
+    assert wood_chip_burning(f)  # confirmed code 5 wins over a missing/shifted F2 bit
+    assert effective_output(f, "leistung", wood_chip=True) == 81.0
+
+
+def test_template_without_feed_channel_falls_back() -> None:
+    from custom_components.hargassner_hk.runtime import effective_output
+
+    now = datetime.now(timezone.utc)
+    with_f2 = Frame(analog={"zk": 4.0, "leistung": 60.0}, digital={"feuerung_aktiv_f2": True}, received=now)
+    no_f2 = Frame(analog={"zk": 4.0, "leistung": 60.0}, digital={}, received=now)
+    burnt_out = Frame(analog={"zk": 7.0, "leistung": 100.0}, digital={"feuerung_aktiv_f2": False}, received=now)
+    assert effective_output(with_f2, "leistung", wood_chip=True) == 60.0
+    assert effective_output(no_f2, "leistung", wood_chip=True) == 60.0  # old rule, nothing to gate on
+    assert effective_output(burnt_out, "leistung", wood_chip=True) == 0.0
