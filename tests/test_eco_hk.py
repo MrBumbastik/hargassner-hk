@@ -150,7 +150,7 @@ async def test_config_flow_applies_stream_quirk(hass: HomeAssistant, fake_boiler
         {CONF_NAME: "Eco-HK", CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port, CONF_DAQ_XML: NO_STORAGE},
     )
     assert result["step_id"] == "cloud"
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_USE_CLOUD: False})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["stream_extras"] == ["ExtHK_1 Solltmp.", "BoiZustand_1", "BoiZustand_1"]
     await hass.async_block_till_done()

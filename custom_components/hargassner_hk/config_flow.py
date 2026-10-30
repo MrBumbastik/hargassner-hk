@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import SOURCE_RECONFIGURE, ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -65,6 +65,7 @@ from .daq import (
     split_pm_line,
     with_stream_extras,
 )
+from .entity import remove_cloud_entities
 from .templates import TEMPLATE_USER, detect_template, is_builtin, load_builtin_templates, plausible
 from .telnet import read_pm_line
 
@@ -89,18 +90,19 @@ def _local_schema(defaults: Mapping[str, Any], with_name: bool) -> vol.Schema:
     return vol.Schema(schema)
 
 
-def _cloud_schema(defaults: Mapping[str, Any]) -> vol.Schema:
+def _cloud_schema() -> vol.Schema:
+    # No separate on/off switch: credentials entered = cloud on, both empty = cloud off.
+    # (A switch defaulting to off silently discarded entered credentials.)
     return vol.Schema(
         {
-            vol.Required(CONF_USE_CLOUD, default=defaults.get(CONF_USE_CLOUD, False)): BooleanSelector(),
-            vol.Optional(CONF_EMAIL, default=defaults.get(CONF_EMAIL, "")): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.EMAIL)
-            ),
-            vol.Optional(CONF_PASSWORD, default=""): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.PASSWORD)
-            ),
+            vol.Optional(CONF_EMAIL): TextSelector(TextSelectorConfig(type=TextSelectorType.EMAIL)),
+            vol.Optional(CONF_PASSWORD): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
         }
     )
+
+
+def _credentials(user_input: dict[str, Any]) -> tuple[str, str]:
+    return (user_input.get(CONF_EMAIL) or "").strip(), user_input.get(CONF_PASSWORD) or ""
 
 
 async def _validate_local(
@@ -224,32 +226,34 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_cloud(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            if not user_input[CONF_USE_CLOUD]:
+            email, password = _credentials(user_input)
+            if not email and not password:
                 return self.async_create_entry(title=self._title, data={**self._data, CONF_USE_CLOUD: False})
-            if not user_input.get(CONF_EMAIL) or not user_input.get(CONF_PASSWORD):
-                errors["base"] = "credentials_required"
-            else:
-                installations, error = await _cloud_login(
-                    self.hass, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
-                )
-                if error:
-                    errors["base"] = error
-                else:
-                    self._data.update(
-                        {
-                            CONF_USE_CLOUD: True,
-                            CONF_EMAIL: user_input[CONF_EMAIL],
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                        }
-                    )
-                    self._installations = installations
-                    if len(installations) == 1:
-                        return self._create_with_installation(installations[0])
-                    return await self.async_step_installation()
+            errors = await self._cloud_credentials(email, password)
+            if not errors:
+                return await self._after_login()
 
         return self.async_show_form(
-            step_id="cloud", data_schema=_cloud_schema(user_input or {}), errors=errors
+            step_id="cloud",
+            data_schema=self.add_suggested_values_to_schema(_cloud_schema(), {CONF_EMAIL: (user_input or {}).get(CONF_EMAIL, "")}),
+            errors=errors,
         )
+
+    async def _after_login(self) -> ConfigFlowResult:
+        if len(self._installations) == 1:
+            return self._create_with_installation(self._installations[0])
+        return await self.async_step_installation()
+
+    async def _cloud_credentials(self, email: str, password: str) -> dict[str, str]:
+        """Log in and remember credentials + installations; returns form errors."""
+        if not email or not password:
+            return {"base": "credentials_required"}
+        installations, error = await _cloud_login(self.hass, email, password)
+        if error:
+            return {"base": error}
+        self._data.update({CONF_USE_CLOUD: True, CONF_EMAIL: email, CONF_PASSWORD: password})
+        self._installations = installations
+        return {}
 
     async def async_step_installation(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
@@ -284,9 +288,52 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
             self._data[CONF_MODEL] = model
         if power:
             options[CONF_NOMINAL_POWER] = power
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            if entry.data.get(CONF_INSTALLATION_ID) not in (None, self._data[CONF_INSTALLATION_ID]):
+                remove_cloud_entities(self.hass, entry)  # other installation: old widgets are gone
+            new_options = dict(entry.options)
+            # Replace the power only if it is the generic default or came from the previous model
+            _, previous = model_info({"devices": [{"type": entry.data.get(CONF_MODEL, "")}]})
+            current = float(entry.options.get(CONF_NOMINAL_POWER, DEFAULT_NOMINAL_POWER))
+            if power and current in (DEFAULT_NOMINAL_POWER, previous):
+                new_options[CONF_NOMINAL_POWER] = power
+            # One update + one reload (a separate options update would reload twice)
+            return self.async_update_reload_and_abort(entry, data_updates=self._data, options=new_options)
         return self.async_create_entry(title=self._title, data=self._data, options=options)
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Choose what to change: local connection/template or cloud login."""
+        return self.async_show_menu(step_id="reconfigure", menu_options=["reconfigure_local", "reconfigure_cloud"])
+
+    async def async_step_reconfigure_cloud(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Add, change or remove the cloud login after setup."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            email, password = _credentials(user_input)
+            if not email and not password:
+                if not entry.data.get(CONF_USE_CLOUD):
+                    return self.async_abort(reason="reconfigure_successful")  # nothing to remove
+                remove_cloud_entities(self.hass, entry)
+                cloud_keys = (CONF_EMAIL, CONF_PASSWORD, CONF_INSTALLATION_ID, CONF_INSTALLATION_NAME)
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={k: v for k, v in entry.data.items() if k not in cloud_keys} | {CONF_USE_CLOUD: False},
+                )
+            self._data = {}
+            errors = await self._cloud_credentials(email, password)
+            if not errors:
+                return await self._after_login()
+        return self.async_show_form(
+            step_id="reconfigure_cloud",
+            data_schema=self.add_suggested_values_to_schema(
+                _cloud_schema(), {CONF_EMAIL: (user_input or {}).get(CONF_EMAIL) or entry.data.get(CONF_EMAIL, "")}
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure_local(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Change host or re-import the DAQ template (e.g. after a firmware update)."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
@@ -301,7 +348,7 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(entry, unique_id=new_id, data_updates=local)
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="reconfigure_local",
             data_schema=self.add_suggested_values_to_schema(
                 _local_schema(user_input or entry.data, False),
                 # A shipped template is not shown: leaving the field empty keeps auto-detection
@@ -319,7 +366,9 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reauth_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
-            _, error = await _cloud_login(self.hass, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
+            email, password = _credentials(user_input)
+            user_input = {CONF_EMAIL: email, CONF_PASSWORD: password}
+            _, error = await _cloud_login(self.hass, email, password)
             if error:
                 errors["base"] = error
             else:

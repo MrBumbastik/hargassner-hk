@@ -191,7 +191,7 @@ async def test_config_flow_with_cloud_sets_model_and_power(hass: HomeAssistant, 
             {CONF_NAME: "Eco-HK", CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port, CONF_DAQ_XML: DAQ_XML},
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_USE_CLOUD: True, CONF_EMAIL: "user@example.com", CONF_PASSWORD: "x"}
+            result["flow_id"], {CONF_EMAIL: "user@example.com", CONF_PASSWORD: "x"}
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_MODEL] == "Eco-HK 50"
@@ -253,3 +253,105 @@ async def test_toggling_write_switch_does_not_reload(hass: HomeAssistant, fake_b
     program = _cloud_entity(hass, entry, "select", "heater", "program")
     await hass.services.async_call("select", "select_option", {"entity_id": program, "option": "program_off"}, blocking=True)
     set_value.assert_awaited_with(f"{BASE}/heater/parameters/program", "PROGRAM_OFF")
+
+
+async def test_credentials_without_switch_enable_cloud(hass: HomeAssistant, fake_boiler: FakeBoiler) -> None:
+    """Regression: entered credentials were discarded when an 'use cloud' switch stayed off."""
+    from homeassistant import config_entries
+    from homeassistant.const import CONF_NAME
+
+    installations = [{"id": 7, "name": "Test", "devices": [{"type": "Eco-HK 50"}]}]
+    with patch("custom_components.hargassner_hk.config_flow._cloud_login", AsyncMock(return_value=(installations, None))):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": config_entries.SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_NAME: "Eco-HK", CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port, CONF_DAQ_XML: DAQ_XML},
+        )
+        assert "use_cloud" not in {str(k) for k in result["data_schema"].schema}
+        # only the password: error, nothing silently dropped
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_PASSWORD: "x"})
+        assert result2["errors"] == {"base": "credentials_required"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_EMAIL: "user@example.com", CONF_PASSWORD: "x"}
+        )
+    assert result["data"][CONF_USE_CLOUD] is True
+    assert result["data"][CONF_EMAIL] == "user@example.com"
+    await hass.async_block_till_done()
+
+
+async def test_add_cloud_after_setup(hass: HomeAssistant, fake_boiler: FakeBoiler) -> None:
+    """Reconfigure → cloud: adds the login to an entry set up without cloud, and removes it again."""
+    from custom_components.hargassner_hk.const import CONF_NOMINAL_POWER
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=fake_boiler.host,
+        data={CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port, CONF_DAQ_XML: DAQ_XML, CONF_USE_CLOUD: False},
+        options={CONF_NOMINAL_POWER: 30.0},
+    )
+    entry.add_to_hass(hass)
+    installations = [{"id": 7, "name": "Test", "devices": [{"type": "Eco-HK 50"}]}]
+    with (
+        patch("custom_components.hargassner_hk.config_flow._cloud_login", AsyncMock(return_value=(installations, None))),
+        patch("custom_components.hargassner_hk.async_setup_entry", AsyncMock(return_value=True)),
+    ):
+        result = await entry.start_reconfigure_flow(hass)
+        assert result["type"] == "menu"
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "reconfigure_cloud"})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_EMAIL: "user@example.com", CONF_PASSWORD: "x"}
+        )
+        assert result["reason"] == "reconfigure_successful"
+        assert entry.data[CONF_USE_CLOUD] is True and entry.data[CONF_INSTALLATION_ID] == "7"
+        assert entry.data[CONF_HOST] == fake_boiler.host  # local data kept
+        assert entry.options[CONF_NOMINAL_POWER] == 50.0  # default replaced by the model's power
+
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "reconfigure_cloud"})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_USE_CLOUD] is False
+    assert CONF_EMAIL not in entry.data and CONF_PASSWORD not in entry.data
+
+
+async def test_wrong_password_is_auth_error(hass: HomeAssistant, aioclient_mock) -> None:
+    """The Hargassner cloud answers wrong credentials with HTTP 400 invalid_grant (OAuth), not 401."""
+    from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+    from custom_components.hargassner_hk.cloud import CloudAuthError, CloudError, HargassnerCloud
+    from custom_components.hargassner_hk.const import API_BASE_URL, API_LOGIN
+
+    aioclient_mock.post(
+        API_BASE_URL + API_LOGIN, status=400,
+        text='{"error":"invalid_grant","error_description":"The user credentials were incorrect."}',
+    )
+    with pytest.raises(CloudAuthError):
+        await HargassnerCloud(async_get_clientsession(hass), "a@b.c", "wrong").login()
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(API_BASE_URL + API_LOGIN, status=400, text='{"error":"invalid_client"}')  # app secret, not user
+    with pytest.raises(CloudError) as err:
+        await HargassnerCloud(async_get_clientsession(hass), "a@b.c", "x").login()
+    assert not isinstance(err.value, CloudAuthError)
+
+
+
+async def test_removing_cloud_deletes_cloud_entities(hass: HomeAssistant, fake_boiler: FakeBoiler) -> None:
+    from homeassistant.helpers import entity_registry as er
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=fake_boiler.host,
+        data={CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port, CONF_DAQ_XML: DAQ_XML, CONF_USE_CLOUD: True,
+              CONF_EMAIL: "a@b.c", CONF_PASSWORD: "x", CONF_INSTALLATION_ID: "7"},
+    )
+    entry.add_to_hass(hass)
+    reg = er.async_get(hass)
+    cloud = reg.async_get_or_create("number", DOMAIN, f"{entry.entry_id}_cloud_boiler_1_boiler_temperature_target", config_entry=entry)
+    local = reg.async_get_or_create("sensor", DOMAIN, f"{entry.entry_id}_a_tk", config_entry=entry)
+    with patch("custom_components.hargassner_hk.async_setup_entry", AsyncMock(return_value=True)):
+        result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "reconfigure_cloud"})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["reason"] == "reconfigure_successful"
+    assert reg.async_get(cloud.entity_id) is None
+    assert reg.async_get(local.entity_id) is not None  # local entities keep their history

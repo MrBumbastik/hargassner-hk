@@ -24,7 +24,8 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 ## P2: während und nach dem ersten Test
 
 - [ ] **Raumtemperatur TRA_x ist ohne Raumfühler ein Platzhalter (20,0 °C)**, auch bei nicht vorhandenen Heizkreisen. Sensor standardmäßig deaktivieren oder 20,0 bei fehlendem Fühler als „unbekannt“ melden. Klären, ob ein Fühler-Status existiert (FR_x Zustand?).
-- [ ] **Cloud nachträglich aktivieren:** Derzeit nur bei der Ersteinrichtung möglich. Für die Ablösung der alten Cloud-Integration (Thermostate, Sollwerte, Betriebsart) einen Weg über Reconfigure oder Optionen anbieten.
+- [x] **Cloud nachträglich aktivieren (v0.5.0):** Neu konfigurieren → Hargassner-Cloud. Bugfix: Im Einrichtungsdialog hat ein standardmäßig ausgeschalteter Schalter eingegebene Zugangsdaten verworfen; der Schalter ist entfernt. Falsches Passwort (OAuth 400 `invalid_grant`) wird jetzt als Anmeldefehler erkannt. Live gegen das echte Konto geprüft.
+  - Ursprünglich: Derzeit nur bei der Ersteinrichtung möglich. Für die Ablösung der alten Cloud-Integration (Thermostate, Sollwerte, Betriebsart) einen Weg über Reconfigure oder Optionen anbieten.
 
 - [x] **Installation in echtem HA (30.10., v0.4.0):** über HACS, Template-Feld leer → automatisch erkannt, 0 abgelehnte Datensätze. Parallel läuft eine zweite Telnet-Integration am selben Kessel → **mehrere Telnet-Verbindungen sind möglich**.
 - [ ] **Vergleich mit anderer Telnet-Integration:** Kesselzustand/-temperatur gleich; Rauchgas, Puffer oben und Außentemperatur weichen dort ab (unsere Werte sind gegen die Cloud geprüft). Nutzer entscheidet über Umstellung von Dashboards (Verlauf beachten).

@@ -99,3 +99,18 @@ def add_cloud_entities(
 
     _add()
     entry.async_on_unload(cloud.async_add_listener(_add))
+
+
+@callback
+def remove_cloud_entities(hass: Any, entry: HargassnerHKConfigEntry) -> None:
+    """Delete cloud entities and heating circuit devices (cloud removed or other installation)."""
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+    ent_reg = er.async_get(hass)
+    for ent in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
+        if ent.unique_id.startswith(f"{entry.entry_id}_cloud_"):
+            ent_reg.async_remove(ent.entity_id)
+    dev_reg = dr.async_get(hass)
+    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
+        if all(ident != (DOMAIN, entry.entry_id) for ident in device.identifiers):
+            dev_reg.async_remove_device(device.id)

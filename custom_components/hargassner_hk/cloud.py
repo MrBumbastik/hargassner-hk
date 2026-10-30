@@ -6,6 +6,7 @@ telnet stream cannot do.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import time
 from typing import Any
@@ -25,6 +26,14 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _oauth_error(body: str) -> str | None:
+    try:
+        data = json.loads(body)
+    except ValueError:
+        return None
+    return data.get("error") if isinstance(data, dict) else None
 
 
 class CloudError(Exception):
@@ -64,7 +73,12 @@ class HargassnerCloud:
                 if resp.status in (401, 403):
                     raise CloudAuthError(f"HTTP {resp.status} for {path}")
                 if resp.status >= 400:
-                    raise CloudError(f"HTTP {resp.status} for {path}: {(await resp.text())[:200]}")
+                    body = await resp.text()
+                    # OAuth: wrong credentials / expired refresh token = 400 {"error": "invalid_grant"}.
+                    # (invalid_client would mean the app's client secret changed: not the user's fault.)
+                    if resp.status == 400 and _oauth_error(body) == "invalid_grant":
+                        raise CloudAuthError(f"Login rejected for {path}")
+                    raise CloudError(f"HTTP {resp.status} for {path}: {body[:200]}")
                 if resp.status == 204:
                     return {}
                 if "json" in (resp.content_type or ""):

@@ -48,7 +48,7 @@ async def test_config_flow_local_only(hass: HomeAssistant, fake_boiler: FakeBoil
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_USE_CLOUD: False})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DAQ_XML] == DAQ_XML  # junk around the block is stripped
     await hass.async_block_till_done()

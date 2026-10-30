@@ -47,7 +47,7 @@ async def test_setup_without_template(hass: HomeAssistant, fake_boiler: FakeBoil
     fake_boiler.line = LIVE_LINE
     result = await _start_flow(hass, fake_boiler)
     assert result["step_id"] == "cloud"
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {CONF_USE_CLOUD: False})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     data = result["data"]
     assert data["template_source"] == "builtin:Eco-HK V30.0HAR.f"
@@ -142,6 +142,7 @@ async def test_reconfigure_cleared_field_switches_to_detection(hass: HomeAssista
     entry.add_to_hass(hass)
     with patch("custom_components.hargassner_hk.async_setup_entry", AsyncMock(return_value=True)):
         result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "reconfigure_local"})
         # Frontend omits an emptied optional field
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port}

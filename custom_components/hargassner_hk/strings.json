@@ -13,9 +13,8 @@
       },
       "cloud": {
         "title": "Hargassner cloud (optional)",
-        "description": "The local stream is read-only. With the cloud login (app account) you can also change setpoints and circuit modes.",
+        "description": "The local stream is read-only. To also control setpoints and modes, enter your Hargassner app login. Leave both fields empty to continue without the cloud.",
         "data": {
-          "use_cloud": "Use cloud for control",
           "email": "Email",
           "password": "Password"
         }
@@ -26,7 +25,15 @@
           "installation_id": "Installation"
         }
       },
-      "reconfigure": {
+      "reauth_confirm": {
+        "title": "Cloud login expired",
+        "description": "The Hargassner cloud rejected the stored credentials.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "reconfigure_local": {
         "title": "Reconfigure boiler",
         "description": "Change the address or import a new DAQ template, e.g. after a firmware update.",
         "data": {
@@ -35,9 +42,17 @@
           "daq_xml": "DAQ template (optional)"
         }
       },
-      "reauth_confirm": {
-        "title": "Cloud login expired",
-        "description": "The Hargassner cloud rejected the stored credentials.",
+      "reconfigure": {
+        "title": "Reconfigure",
+        "description": "What do you want to change?",
+        "menu_options": {
+          "reconfigure_local": "Boiler connection / DAQ template",
+          "reconfigure_cloud": "Hargassner cloud login"
+        }
+      },
+      "reconfigure_cloud": {
+        "title": "Hargassner cloud",
+        "description": "Enter your Hargassner app login to add or change the cloud connection. Leave both fields empty to remove it.",
         "data": {
           "email": "Email",
           "password": "Password"
@@ -51,7 +66,7 @@
       "invalid_auth": "Cloud login failed: wrong email or password.",
       "cloud_cannot_connect": "The Hargassner cloud is not reachable.",
       "no_installations": "No installation found in this cloud account.",
-      "credentials_required": "Enter email and password, or disable the cloud.",
+      "credentials_required": "Enter both email and password, or leave both empty to continue without the cloud.",
       "template_required": "Your boiler (sends {received} values per line) is not among the templates shipped with the integration. Please paste the DAQ template of your boiler (see the description above)."
     },
     "abort": {

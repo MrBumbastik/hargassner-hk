@@ -13,9 +13,8 @@
       },
       "cloud": {
         "title": "Hargassner-Cloud (optional)",
-        "description": "Der lokale Datenstrom kann nur gelesen werden. Mit dem Cloud-Login (App-Konto) kannst du auch Sollwerte und Heizkreis-Betriebsarten ändern.",
+        "description": "Der lokale Datenstrom kann nur gelesen werden. Um auch Sollwerte und Betriebsarten zu steuern, gib deinen Hargassner-App-Login ein. Lass beide Felder leer, um ohne Cloud fortzufahren.",
         "data": {
-          "use_cloud": "Cloud zum Steuern verwenden",
           "email": "E-Mail",
           "password": "Passwort"
         }
@@ -26,7 +25,15 @@
           "installation_id": "Anlage"
         }
       },
-      "reconfigure": {
+      "reauth_confirm": {
+        "title": "Cloud-Anmeldung abgelaufen",
+        "description": "Die Hargassner-Cloud hat die gespeicherten Zugangsdaten abgelehnt.",
+        "data": {
+          "email": "E-Mail",
+          "password": "Passwort"
+        }
+      },
+      "reconfigure_local": {
         "title": "Kessel neu konfigurieren",
         "description": "Adresse ändern oder ein neues DAQ-Template einlesen, z. B. nach einem Firmware-Update.",
         "data": {
@@ -35,9 +42,17 @@
           "daq_xml": "DAQ-Template (optional)"
         }
       },
-      "reauth_confirm": {
-        "title": "Cloud-Anmeldung abgelaufen",
-        "description": "Die Hargassner-Cloud hat die gespeicherten Zugangsdaten abgelehnt.",
+      "reconfigure": {
+        "title": "Neu konfigurieren",
+        "description": "Was möchtest du ändern?",
+        "menu_options": {
+          "reconfigure_local": "Kesselverbindung / DAQ-Template",
+          "reconfigure_cloud": "Hargassner-Cloud-Login"
+        }
+      },
+      "reconfigure_cloud": {
+        "title": "Hargassner-Cloud",
+        "description": "Gib deinen Hargassner-App-Login ein, um die Cloud-Verbindung hinzuzufügen oder zu ändern. Lass beide Felder leer, um sie zu entfernen.",
         "data": {
           "email": "E-Mail",
           "password": "Passwort"
@@ -51,7 +66,7 @@
       "invalid_auth": "Cloud-Anmeldung fehlgeschlagen: E-Mail oder Passwort falsch.",
       "cloud_cannot_connect": "Die Hargassner-Cloud ist nicht erreichbar.",
       "no_installations": "In diesem Cloud-Konto wurde keine Anlage gefunden.",
-      "credentials_required": "Gib E-Mail und Passwort ein oder deaktiviere die Cloud.",
+      "credentials_required": "Gib E-Mail und Passwort ein, oder lass beide Felder leer, um ohne Cloud fortzufahren.",
       "template_required": "Dein Kessel (sendet {received} Werte pro Zeile) ist nicht unter den mitgelieferten Templates. Bitte füge das DAQ-Template deines Kessels ein (siehe Beschreibung oben)."
     },
     "abort": {

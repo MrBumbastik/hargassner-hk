@@ -69,12 +69,15 @@ async def test_reconfigure_updates_unique_id(hass: HomeAssistant, fake_boiler: F
 
     with patch("custom_components.hargassner_hk.async_setup_entry", AsyncMock(return_value=True)):
         result = await entry.start_reconfigure_flow(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "reconfigure_local"})
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: " 10.0.0.99 ", CONF_PORT: fake_boiler.port, CONF_DAQ_XML: DAQ_XML}
         )
         assert result["reason"] == "already_configured"
 
         result = await entry.start_reconfigure_flow(hass)
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "reconfigure_local"})
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: " 127.0.0.1\n", CONF_PORT: fake_boiler.port, CONF_DAQ_XML: DAQ_XML}
         )
