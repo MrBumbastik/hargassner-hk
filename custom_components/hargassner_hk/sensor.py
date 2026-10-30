@@ -21,7 +21,7 @@ from . import HargassnerHKConfigEntry
 from .channels import (
     BOILER_STATE_OPTIONS,
     BOILER_STATE_OTHER,
-    BOILER_STATES,
+    boiler_state,
     analog_meta,
     error_text,
     is_wood_chip,
@@ -51,7 +51,7 @@ async def async_setup_entry(
     ]
 
     if state := data.fmt.analog_by_name(CHANNEL_STATE):
-        entities.append(BoilerStateSensor(local, state.key))
+        entities.append(BoilerStateSensor(local, state.key, wood_chip))
     if error := data.fmt.analog_by_name(CHANNEL_ERROR):
         entities.append(ErrorSensor(local, error.key))
 
@@ -111,9 +111,10 @@ class BoilerStateSensor(LocalEntity, SensorEntity):
     _attr_options = BOILER_STATE_OPTIONS
     _attr_translation_key = "boiler_state"
 
-    def __init__(self, coordinator: LocalCoordinator, key: str) -> None:
+    def __init__(self, coordinator: LocalCoordinator, key: str, wood_chip: bool = False) -> None:
         super().__init__(coordinator, "boiler_state")
         self._key = key
+        self._wood_chip = wood_chip
 
     def _code(self) -> int | None:
         value = self.coordinator.data.analog.get(self._key)
@@ -124,7 +125,7 @@ class BoilerStateSensor(LocalEntity, SensorEntity):
         code = self._code()
         if code is None:
             return None
-        return BOILER_STATES.get(code, BOILER_STATE_OTHER)
+        return boiler_state(code, self._wood_chip)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

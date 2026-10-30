@@ -30,6 +30,8 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 
+from .const import WOOD_CHIP_MARKERS, WOOD_CHIP_STATE_CODES
+
 
 @dataclass(frozen=True)
 class SensorMeta:
@@ -132,7 +134,6 @@ ANALOG_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
 WOOD_CHIP_DISABLED = {"brt", "wasserdruck", "atue"}
 # Normally closed contacts on wood chip boilers: bit set = closed = OK.
 WOOD_CHIP_INVERTED = {"stb", "notaus"}
-WOOD_CHIP_MARKERS = {"ra_run", "er_run", "ar_run"}
 
 
 def is_wood_chip(digital_keys: set[str]) -> bool:
@@ -261,6 +262,17 @@ BOILER_STATES: dict[int, str] = {
 BOILER_STATE_OTHER = "other"
 BOILER_STATE_OPTIONS = [*dict.fromkeys(BOILER_STATES.values()), BOILER_STATE_OTHER]
 BURNING_STATES = {"ignition", "transition_full_firing", "full_firing"}
+
+# Wood chip boilers (Eco-HK) use other codes. Only codes confirmed on the boiler display
+# are listed; everything else shows as "other" with the raw code, never a guessed name.
+# Verified on an Eco-HK 50 (V30.0HAR.f): 1 = Aus, 5 = Leistungsbrand (output 81 %, O2 regulated).
+BOILER_STATES_WOOD_CHIP: dict[int, str] = dict(WOOD_CHIP_STATE_CODES)
+
+
+def boiler_state(code: int, wood_chip: bool) -> str:
+    """Translation key of a ZK code for the boiler family."""
+    table = BOILER_STATES_WOOD_CHIP if wood_chip else BOILER_STATES
+    return table.get(code, BOILER_STATE_OTHER)
 
 
 # --- error codes (Störungs Nr) -------------------------------------------------

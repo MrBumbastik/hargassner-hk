@@ -55,6 +55,15 @@ DEFAULT_EFFICIENCY = 90.0  # %
 
 # Well-known channel names in the DAQ template
 CHANNEL_STATE = "ZK"
+
+# Wood chip boilers (Eco-HK). Shared by channels.py (entities) and runtime.py (hours).
+WOOD_CHIP_MARKERS = frozenset({"ra_run", "er_run", "ar_run"})  # room discharge + grate drives
+KEY_STATE = "zk"
+KEY_OUTPUT = "leistung"
+KEY_IGNITION_HEATER = "z_heiz"
+# Only codes confirmed on the display of an Eco-HK 50 (V30.0HAR.f); others show as "other".
+WOOD_CHIP_STATE_CODES = {1: "off", 5: "full_firing"}
+WOOD_CHIP_FULL_FIRING = frozenset(code for code, key in WOOD_CHIP_STATE_CODES.items() if key == "full_firing")
 CHANNEL_ERROR = "Störungs Nr"
 
 UNIT_SRM = "SRM"

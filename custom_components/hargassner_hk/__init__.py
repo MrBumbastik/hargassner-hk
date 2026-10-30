@@ -47,7 +47,7 @@ from .const import (
     SERVICE_SET_STORAGE,
 )
 from .coordinator import CloudCoordinator, LocalCoordinator, fuel_store, runtime_store
-from .runtime import RuntimeTracker, available_counters
+from .runtime import PROFILE_WOOD_CHIP, RuntimeTracker, available_counters, is_wood_chip
 from .daq import DaqFormat, DaqFormatError, fit_to_stream, parse_daq_xml, with_stream_extras
 from .templates import detect_template, is_builtin, load_builtin_templates
 from .fuel import FuelSettings, FuelTracker
@@ -165,9 +165,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry)
     fuel = FuelTracker(fuel_settings(entry), await store.async_load())
 
     rt_store = runtime_store(hass, entry.entry_id)
+    digital_keys = {ch.key for ch in fmt.digital}
     runtime = RuntimeTracker(
-        available_counters({ch.key for ch in fmt.analog}, {ch.key for ch in fmt.digital}),
+        available_counters({ch.key for ch in fmt.analog}, digital_keys),
         await rt_store.async_load(),
+        profile=PROFILE_WOOD_CHIP if is_wood_chip(digital_keys) else None,
     )
     # Every frame (~1/s) goes to the operating hours: short feed screw pulses would be missed otherwise
     client = HargassnerTelnet(

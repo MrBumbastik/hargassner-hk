@@ -20,7 +20,7 @@ TEMPLATE = (Path(__file__).parent / "fixtures" / "eco_hk_50_v30.0HAR.f.xml").rea
 def _line() -> str:
     fmt = parse_daq_xml(TEMPLATE)
     analog = ["0"] * fmt.analog_count
-    values = {"ZK": 7, "TK": 78.5, "TRG": 140, "Leistung": 85, "SZ": 60, "UD": 32, "Förder": 40,
+    values = {"ZK": 5, "TK": 78.5, "TRG": 140, "Leistung": 85, "SZ": 60, "UD": 32, "Förder": 40,
               "BRT": 820, "Wasserdruck": 1.8, "Pufferfüllgrad": 64, "TRA_1": 20.5, "Lagerstand HK": 42.5,
               "Störungs Nr": 0}
     for name, value in values.items():
@@ -232,3 +232,38 @@ async def test_setup_adopts_stream_correction(hass: HomeAssistant, fake_boiler: 
         assert entry.state is ConfigEntryState.LOADED
     finally:
         integration.FIRST_FRAME_TIMEOUT = 20.0
+
+
+
+def test_wood_chip_state_table() -> None:
+    """Eco-HK codes differ from the pellet table: only confirmed codes get a name."""
+    from custom_components.hargassner_hk.channels import boiler_state
+
+    assert boiler_state(5, wood_chip=True) == "full_firing"  # display: Leistungsbrand
+    assert boiler_state(1, wood_chip=True) == "off"
+    assert boiler_state(7, wood_chip=True) == "other"  # unconfirmed on the Eco-HK
+    assert boiler_state(5, wood_chip=False) == "ignition"  # pellet table unchanged
+
+
+
+async def test_wood_chip_state_entities(hass: HomeAssistant, fake_boiler: FakeBoiler) -> None:
+    """Unconfirmed code -> 'other' with raw code; burner active via the ignition heater bit."""
+    fmt = parse_daq_xml(TEMPLATE)
+    analog = ["0"] * fmt.analog_count
+    analog[fmt.analog_by_name("ZK").index] = "3"
+    words = [0] * fmt.digital_count
+    zh = next(ch for ch in fmt.digital if ch.name == "Z Heiz.")
+    words[zh.word] |= 1 << zh.bit
+    fake_boiler.line = "pm " + " ".join(analog + [f"{w:08X}" for w in words])
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port, CONF_DAQ_XML: TEMPLATE, CONF_USE_CLOUD: False},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    reg = er.async_get(hass)
+    state = hass.states.get(reg.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_boiler_state"))
+    assert state.state == "other" and state.attributes["code"] == 3
+    burning = hass.states.get(reg.async_get_entity_id("binary_sensor", DOMAIN, f"{entry.entry_id}_burning"))
+    assert burning.state == "on"

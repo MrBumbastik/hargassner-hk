@@ -7,7 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HargassnerHKConfigEntry
-from .channels import BOILER_STATES, BURNING_STATES, digital_meta, is_wood_chip
+from .channels import BURNING_STATES, boiler_state, digital_meta, is_wood_chip
+from .runtime import wood_chip_burning
 from .const import CHANNEL_ERROR, CHANNEL_STATE
 from .coordinator import CloudCoordinator, CloudData, LocalCoordinator
 from .daq import DigitalChannel
@@ -27,7 +28,7 @@ async def async_setup_entry(
     entities: list[BinarySensorEntity] = [DigitalSensor(local, ch, wood_chip) for ch in data.fmt.digital]
     entities.append(ConnectionSensor(local))
     if state := data.fmt.analog_by_name(CHANNEL_STATE):
-        entities.append(BurningSensor(local, state.key))
+        entities.append(BurningSensor(local, state.key, wood_chip))
     if error := data.fmt.analog_by_name(CHANNEL_ERROR):
         entities.append(FaultActiveSensor(local, error.key))
     async_add_entities(entities)
@@ -91,16 +92,19 @@ class BurningSensor(LocalEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.HEAT
     _attr_translation_key = "burning"
 
-    def __init__(self, coordinator: LocalCoordinator, key: str) -> None:
+    def __init__(self, coordinator: LocalCoordinator, key: str, wood_chip: bool = False) -> None:
         super().__init__(coordinator, "burning")
         self._key = key
+        self._wood_chip = wood_chip
 
     @property
     def is_on(self) -> bool | None:
+        if self._wood_chip:
+            return wood_chip_burning(self.coordinator.data)  # same rule as the operating hours
         value = self.coordinator.data.analog.get(self._key)
         if not isinstance(value, float):
             return None
-        return BOILER_STATES.get(int(value)) in BURNING_STATES
+        return boiler_state(int(value), False) in BURNING_STATES
 
 
 class FaultActiveSensor(LocalEntity, BinarySensorEntity):

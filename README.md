@@ -106,7 +106,8 @@ actions:
 ## Entitäten
 
 - **Sensoren:** alle Analogkanäle des Templates. Bekannte Kanäle (TK, TRG, O2, SZist, Leistung, Puffer, Vorläufe …) haben deutsche Namen. Motorströme und unbekannte Kanäle ohne °C-Einheit sind standardmäßig deaktiviert, du kannst sie bei Bedarf aktivieren.
-- **Kesselzustand** (Aus, Zündung, Leistungsbrand, Gluterhaltung, Entaschung …) mit dem Rohcode als Attribut.
+- **Kesselzustand** mit dem Rohcode als Attribut. Beim Eco-HK sind bisher „Aus“ (1) und „Leistungsbrand“ (5) am Display bestätigt; andere Codes erscheinen als „Sonstiger Zustand“, bis sie zugeordnet sind (bitte melden: Code + Displaytext).
+- **Betriebsstunden** je Komponente (Brenner, Zündung, Saugzug, Einschub, Austragungen, Roste, Putzmotor, Pumpen) mit Statistik pro Tag/Woche/Monat; Zählerstände für den Abgleich mit dem Kesseldisplay (Aktion `hargassner_hk.set_operating_hours`).
 - **Störung** als Text mit Code, dazu der Binärsensor *Störung aktiv*.
 - **Binärsensoren:** Digitalkanäle wie Pumpen und Störmeldung, *Brenner aktiv*, lokale Verbindung und Cloud-Verbindung.
 - **Mit Cloud:**

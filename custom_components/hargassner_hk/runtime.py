@@ -15,6 +15,13 @@ from dataclasses import dataclass
 import time
 from typing import Any
 
+from .const import (
+    KEY_IGNITION_HEATER,
+    KEY_OUTPUT,
+    KEY_STATE,
+    WOOD_CHIP_FULL_FIRING,
+    WOOD_CHIP_MARKERS,
+)
 from .daq import Frame
 
 # Longer gaps between frames are not counted. Must stay below the telnet reconnect delay
@@ -70,10 +77,43 @@ COUNTERS: tuple[Counter, ...] = (
 )
 
 
+# Wood chip boilers: other state codes, and the ignition heater has its own bit.
+PROFILE_WOOD_CHIP = "wood_chip_v1"
+
+
+def wood_chip_burning(frame: Frame) -> bool:
+    """Burner active on a wood chip boiler. Single rule for the entity and the hours.
+
+    Full firing (confirmed code), ignition heater on, or any output: catches transition
+    phases whose codes are not confirmed yet.
+    """
+    output = frame.analog.get(KEY_OUTPUT)
+    return (
+        _state_in(set(WOOD_CHIP_FULL_FIRING))(frame)
+        or bool(frame.digital.get(KEY_IGNITION_HEATER))
+        or (isinstance(output, float) and output > 0)
+    )
+
+
+WOOD_CHIP_COUNTERS: dict[str, Counter] = {
+    "burner": Counter("burner", f"a:{KEY_STATE}", wood_chip_burning, True),
+    "full_firing": Counter("full_firing", f"a:{KEY_STATE}", _state_in(set(WOOD_CHIP_FULL_FIRING))),
+    "ignition": Counter("ignition", f"d:{KEY_IGNITION_HEATER}", _bit(KEY_IGNITION_HEATER), True),
+}
+# Counted with the pellet table before the wood chip profile existed -> reset once
+_WOOD_CHIP_RESET = ("ignition", "full_firing")
+
+
+def is_wood_chip(digital_keys: set[str]) -> bool:
+    return WOOD_CHIP_MARKERS <= digital_keys
+
+
 def available_counters(analog_keys: set[str], digital_keys: set[str]) -> tuple[Counter, ...]:
-    """Counters whose source channel exists in the template."""
+    """Counters whose source channel exists in the template (wood chip profile if applicable)."""
     keys = {f"a:{k}" for k in analog_keys} | {f"d:{k}" for k in digital_keys}
-    return tuple(c for c in COUNTERS if c.requires in keys)
+    wood_chip = is_wood_chip(digital_keys)
+    counters = (WOOD_CHIP_COUNTERS.get(c.key, c) if wood_chip else c for c in COUNTERS)
+    return tuple(c for c in counters if c.requires in keys)
 
 
 class RuntimeTracker:
@@ -84,6 +124,7 @@ class RuntimeTracker:
         counters: tuple[Counter, ...],
         stored: dict[str, Any] | None = None,
         clock: Callable[[], float] = time.monotonic,
+        profile: str | None = None,
     ) -> None:
         self.counters = counters
         self._clock = clock
@@ -97,6 +138,12 @@ class RuntimeTracker:
         for c in counters:
             self.seconds.setdefault(c.key, 0.0)
         self.offsets: dict[str, float] = {k: float(v) for k, v in stored_offsets.items()}
+        self.profile = profile
+        if profile == PROFILE_WOOD_CHIP and stored.get("profile") != PROFILE_WOOD_CHIP:
+            for key in _WOOD_CHIP_RESET:  # counted with the wrong (pellet) state codes
+                if key in self.seconds:
+                    self.seconds[key] = 0.0
+                self.offsets.pop(key, None)
         self._last_time: float | None = None
         self._last_active: dict[str, bool] = {}
         self.changed = False
@@ -136,6 +183,7 @@ class RuntimeTracker:
 
     def as_dict(self) -> dict[str, Any]:
         return {
+            "profile": self.profile,
             "seconds": {k: round(v, 1) for k, v in self.seconds.items()},
             "offsets": {k: round(v, 1) for k, v in self.offsets.items()},
         }

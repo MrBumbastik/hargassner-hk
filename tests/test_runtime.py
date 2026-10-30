@@ -153,3 +153,40 @@ async def test_runtime_sensors_and_service(hass: HomeAssistant, fake_boiler: Fak
     assert await hass.config_entries.async_unload(entry.entry_id)  # saves on unload
     stored = await local._runtime_store.async_load()
     assert "room_discharge" in stored["offsets"]
+
+
+
+def test_wood_chip_profile() -> None:
+    """Eco-HK: full firing = code 5, ignition from the ignition heater bit, burner = either."""
+    fmt = parse_daq_xml(NO_STORAGE)
+    counters = available_counters({c.key for c in fmt.analog}, {c.key for c in fmt.digital})
+    clock = Clock()
+    rt = RuntimeTracker(counters, clock=clock)
+    for i in range(61):  # 1 min ignition heater, then 1 min full firing (code 5)
+        clock.t = float(i)
+        rt.add_frame(frame(zk=3, z_heiz=True))
+    for i in range(61, 121):
+        clock.t = float(i)
+        rt.add_frame(frame(zk=5))
+    assert rt.seconds["ignition"] == pytest.approx(61)
+    assert rt.seconds["full_firing"] == pytest.approx(59)
+    assert rt.seconds["burner"] == pytest.approx(120)
+
+
+
+def test_wood_chip_burner_rule_and_migration() -> None:
+    from custom_components.hargassner_hk.runtime import PROFILE_WOOD_CHIP, wood_chip_burning
+
+    assert wood_chip_burning(frame(zk=5))  # confirmed full firing
+    assert wood_chip_burning(frame(zk=4, z_heiz=True))  # ignition heater, unknown code
+    out = Frame(analog={"zk": 6.0, "leistung": 30.0}, digital={}, received=datetime.now(timezone.utc))
+    assert wood_chip_burning(out)  # unconfirmed transition code, but output > 0
+    assert not wood_chip_burning(frame(zk=1))
+    # Hours counted with the pellet table before the profile existed are reset once
+    old = {"seconds": {"ignition": 1800.0, "full_firing": 5.0, "burner": 3600.0}, "offsets": {"ignition": 9.0}}
+    rt = RuntimeTracker(COUNTERS, old, profile=PROFILE_WOOD_CHIP)
+    assert rt.seconds["ignition"] == 0 and rt.seconds["full_firing"] == 0 and rt.seconds["burner"] == 3600
+    assert "ignition" not in rt.offsets
+    again = RuntimeTracker(COUNTERS, {**rt.as_dict(), "seconds": {**rt.as_dict()["seconds"], "ignition": 60.0}},
+                           profile=PROFILE_WOOD_CHIP)
+    assert again.seconds["ignition"] == 60  # only once
