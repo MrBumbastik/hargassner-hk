@@ -23,6 +23,8 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 
 ## P2: während und nach dem ersten Test
 
+- [x] **DAQ-Template optional (30.10., v0.4.0):** Geprüfte Templates liegen in `custom_components/hargassner_hk/templates/`. Die Erkennung akzeptiert nur Template plus verifizierte Stromkorrektur und prüft Zustand und Kesseltemperatur auf Plausibilität. Automatisch gewählte Templates folgen Layoutänderungen selbst (3 gleich lange Zeilen nötig). Offen: verwaiste Entität „Lagerstand HK“, wenn die Lagerbestandsberechnung wieder ausgeschaltet wird.
+
 - [x] **Erster Live-Lesetest (30.10.):** Strom erreichbar, 143 Werte statt 140 → Korrektur für 3 zusätzliche Werte (`STREAM_QUIRKS` in `daq.py`), gegen die Cloud verifiziert. Stb, NotAus und SK_* sind Ruhestromkontakte (invertiert). BRT, Wasserdruck und ATÜ liefern Platzhalter (bei Hackgut standardmäßig aus). Echte Zeile als Fixture `tests/fixtures/eco_hk_50_live_line.txt`.
 - [ ] **Unsichere Position des ersten Zusatzwerts** (ExtHK-Block, Index 78–80): betrifft nur externe Heizkreise. Klären, sobald jemand mit ExtHK meldet.
 

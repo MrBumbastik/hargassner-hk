@@ -24,6 +24,7 @@ from .const import (
     CONF_CLOUD_INTERVAL,
     CONF_DAQ_XML,
     CONF_STREAM_EXTRAS,
+    CONF_TEMPLATE_SOURCE,
     CONF_EFFICIENCY,
     CONF_INSTALLATION_ID,
     CONF_NOMINAL_POWER,
@@ -44,6 +45,7 @@ from .const import (
 )
 from .coordinator import CloudCoordinator, LocalCoordinator, fuel_store
 from .daq import DaqFormat, DaqFormatError, fit_to_stream, parse_daq_xml, with_stream_extras
+from .templates import detect_template, is_builtin, load_builtin_templates
 from .fuel import FuelSettings, FuelTracker
 from .telnet import HargassnerTelnet
 
@@ -142,12 +144,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry)
     client.start()
     if not await client.wait_for_frame(FIRST_FRAME_TIMEOUT):
         await client.stop()
-        if client.frames_rejected and client.last_rejected_length is not None:
-            # Stream layout changed (e.g. firmware update): adopt a known correction and retry.
-            extras = fit_to_stream(base_fmt, client.last_rejected_length)
-            if extras is not None and list(extras) != list(entry.data.get(CONF_STREAM_EXTRAS, [])):
-                _LOGGER.info("Stream layout changed, applying known correction %s", extras)
-                hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_STREAM_EXTRAS: list(extras)})
+        # The stream layout changed (firmware update, storage calculation switched on/off).
+        # Only act on a length seen repeatedly, never on a single garbled line.
+        length = client.last_rejected_length
+        if length is not None and client.rejected_streak >= 3:
+            update: dict = {}
+            if is_builtin(entry.data):
+                # Template was chosen automatically: re-detect among the shipped ones
+                templates = await hass.async_add_executor_job(load_builtin_templates)
+                if detection := detect_template(templates, length):
+                    update = {
+                        CONF_DAQ_XML: detection.xml,
+                        CONF_STREAM_EXTRAS: list(detection.extras),
+                        CONF_TEMPLATE_SOURCE: detection.source,
+                    }
+            elif (extras := fit_to_stream(base_fmt, length)) is not None:
+                update = {CONF_STREAM_EXTRAS: list(extras)}  # user template: only adapt the correction
+            if update and any(entry.data.get(k) != v for k, v in update.items()):
+                _LOGGER.warning("Boiler stream layout changed (%s values), adapting: %s", length, update.get(CONF_TEMPLATE_SOURCE, update))
+                hass.config_entries.async_update_entry(entry, data={**entry.data, **update})
+                raise ConfigEntryNotReady("Boiler stream layout changed, template adapted, retrying")
         if client.frames_rejected:
             reason = (
                 f"pm line has {client.last_rejected_length} values, "

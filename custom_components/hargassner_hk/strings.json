@@ -3,12 +3,12 @@
     "step": {
       "user": {
         "title": "Hargassner wood chip boiler",
-        "description": "Connect to the local data stream of the Touch-Tronic (LAN, port 23).\n\nThe DAQ template describes the fields of your boiler. Export it with an SD card: **Settings → Setup → File manager → DAQ**, choose the newest file and press **Export**. Open the file in a text editor and paste the `DAQPRJ` block from the beginning (pasting the whole file also works).",
+        "description": "Connect to the local data stream of the Touch-Tronic (LAN, port 23).\n\nThe **DAQ template** is optional: leave it empty and the integration detects your boiler from the templates it ships with. Only if your boiler is not recognised, export the template: **Settings → Setup → File manager → DAQ**, choose the newest file, **Export**, and paste the `DAQPRJ` block from the start of the file.",
         "data": {
           "name": "Name",
           "host": "IP address of the boiler",
           "port": "Port",
-          "daq_xml": "DAQ template"
+          "daq_xml": "DAQ template (optional)"
         }
       },
       "cloud": {
@@ -32,7 +32,7 @@
         "data": {
           "host": "IP address of the boiler",
           "port": "Port",
-          "daq_xml": "DAQ template"
+          "daq_xml": "DAQ template (optional)"
         }
       },
       "reauth_confirm": {
@@ -51,7 +51,8 @@
       "invalid_auth": "Cloud login failed: wrong email or password.",
       "cloud_cannot_connect": "The Hargassner cloud is not reachable.",
       "no_installations": "No installation found in this cloud account.",
-      "credentials_required": "Enter email and password, or disable the cloud."
+      "credentials_required": "Enter email and password, or disable the cloud.",
+      "template_required": "Your boiler (sends {received} values per line) is not among the templates shipped with the integration. Please paste the DAQ template of your boiler (see the description above)."
     },
     "abort": {
       "already_configured": "This boiler is already set up.",

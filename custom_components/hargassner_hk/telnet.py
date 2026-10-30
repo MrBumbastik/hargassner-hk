@@ -70,6 +70,7 @@ class HargassnerTelnet:
         self.frames_received = 0
         self.frames_rejected = 0
         self.last_rejected_length: int | None = None
+        self.rejected_streak = 0  # consecutive rejected lines of the same length
         self.last_error: str | None = None
 
     def start(self) -> None:
@@ -150,9 +151,11 @@ class HargassnerTelnet:
                     len(values),
                     self.fmt.expected_length,
                 )
+            self.rejected_streak = self.rejected_streak + 1 if self.last_rejected_length == len(values) else 1
             self.last_rejected_length = len(values)
             return
         self.frames_received += 1
+        self.rejected_streak = 0
         self.latest = frame
         self._first_frame.set()
         if self._on_frame is not None:

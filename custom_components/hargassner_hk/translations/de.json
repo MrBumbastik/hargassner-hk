@@ -3,12 +3,12 @@
     "step": {
       "user": {
         "title": "Hargassner Hackgutkessel",
-        "description": "Verbindung zum lokalen Datenstrom des Touch-Tronic (LAN, Port 23).\n\nDas DAQ-Template beschreibt die Felder deines Kessels. Exportiere es auf eine SD-Karte: **Einstellen → Setup → Dateimanager → DAQ**, die neueste Datei wählen und **Export** drücken. Öffne die Datei in einem Texteditor und füge den `DAQPRJ`-Block vom Dateianfang ein (die ganze Datei einfügen geht auch).",
+        "description": "Verbindung zum lokalen Datenstrom des Touch-Tronic (LAN, Port 23).\n\nDas **DAQ-Template** ist optional: Lass das Feld leer, dann erkennt die Integration deinen Kessel anhand mitgelieferter Templates. Nur wenn dein Kessel nicht erkannt wird, exportiere das Template: **Einstellen → Setup → Dateimanager → DAQ**, neueste Datei wählen, **Export**, und füge den `DAQPRJ`-Block vom Dateianfang ein.",
         "data": {
           "name": "Name",
           "host": "IP-Adresse des Kessels",
           "port": "Port",
-          "daq_xml": "DAQ-Template"
+          "daq_xml": "DAQ-Template (optional)"
         }
       },
       "cloud": {
@@ -32,7 +32,7 @@
         "data": {
           "host": "IP-Adresse des Kessels",
           "port": "Port",
-          "daq_xml": "DAQ-Template"
+          "daq_xml": "DAQ-Template (optional)"
         }
       },
       "reauth_confirm": {
@@ -51,7 +51,8 @@
       "invalid_auth": "Cloud-Anmeldung fehlgeschlagen: E-Mail oder Passwort falsch.",
       "cloud_cannot_connect": "Die Hargassner-Cloud ist nicht erreichbar.",
       "no_installations": "In diesem Cloud-Konto wurde keine Anlage gefunden.",
-      "credentials_required": "Gib E-Mail und Passwort ein oder deaktiviere die Cloud."
+      "credentials_required": "Gib E-Mail und Passwort ein oder deaktiviere die Cloud.",
+      "template_required": "Dein Kessel (sendet {received} Werte pro Zeile) ist nicht unter den mitgelieferten Templates. Bitte füge das DAQ-Template deines Kessels ein (siehe Beschreibung oben)."
     },
     "abort": {
       "already_configured": "Dieser Kessel ist bereits eingerichtet.",

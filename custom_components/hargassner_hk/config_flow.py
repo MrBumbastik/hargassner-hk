@@ -36,6 +36,7 @@ from .const import (
     CONF_CLOUD_INTERVAL,
     CONF_DAQ_XML,
     CONF_STREAM_EXTRAS,
+    CONF_TEMPLATE_SOURCE,
     CONF_EFFICIENCY,
     CONF_INSTALLATION_ID,
     CONF_INSTALLATION_NAME,
@@ -64,6 +65,7 @@ from .daq import (
     split_pm_line,
     with_stream_extras,
 )
+from .templates import TEMPLATE_USER, detect_template, is_builtin, load_builtin_templates, plausible
 from .telnet import read_pm_line
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +81,9 @@ def _local_schema(defaults: Mapping[str, Any], with_name: bool) -> vol.Schema:
     schema[vol.Required(CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT))] = vol.All(
         vol.Coerce(int), vol.Range(min=1, max=65535)
     )
-    schema[vol.Required(CONF_DAQ_XML, default=defaults.get(CONF_DAQ_XML, vol.UNDEFINED))] = TextSelector(
+    # Optional without default: empty (or omitted) means "detect from the shipped templates".
+    # Prefill via suggested values only, so clearing the field really clears it.
+    schema[vol.Optional(CONF_DAQ_XML)] = TextSelector(
         TextSelectorConfig(multiline=True)
     )
     return vol.Schema(schema)
@@ -100,36 +104,58 @@ def _cloud_schema(defaults: Mapping[str, Any]) -> vol.Schema:
 
 
 async def _validate_local(
-    user_input: dict[str, Any],
-) -> tuple[str, list[str], dict[str, str], dict[str, str]]:
-    """Parse the template and check it against a live pm line.
+    hass: Any, user_input: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, str], dict[str, str]]:
+    """Check the boiler connection and find a template that fits its stream.
 
-    Returns (cleaned xml, stream correction, errors, description placeholders).
+    Without a pasted template, the templates shipped with the integration are tried.
+    Returns (entry data for host/port/template, errors, description placeholders).
     """
-    try:
-        xml = extract_daq_xml(user_input[CONF_DAQ_XML])
-        fmt = parse_daq_xml(xml)
-    except DaqFormatError as err:
-        _LOGGER.debug("Invalid DAQ template: %s", err)
-        return "", [], {CONF_DAQ_XML: "invalid_daq"}, {"error_detail": str(err)}
+    raw = (user_input.get(CONF_DAQ_XML) or "").strip()
+    fmt = None
+    if raw:
+        try:
+            xml = extract_daq_xml(raw)
+            fmt = parse_daq_xml(xml)
+        except DaqFormatError as err:
+            _LOGGER.debug("Invalid DAQ template: %s", err)
+            return {}, {CONF_DAQ_XML: "invalid_daq"}, {"error_detail": str(err)}
 
     try:
         line = await read_pm_line(user_input[CONF_HOST], user_input[CONF_PORT])
     except (OSError, TimeoutError, ConnectionError, ValueError) as err:
         # ValueError: garbage without newline beyond the stream reader limit
         _LOGGER.debug("Cannot read pm line: %s", err)
-        return xml, [], {"base": "cannot_connect"}, {}
-
+        return {}, {"base": "cannot_connect"}, {}
     received = len(split_pm_line(line) or [])
-    extras = fit_to_stream(fmt, received)
-    if extras is None or decode_frame(with_stream_extras(fmt, extras), line, dt_util.utcnow()) is None:
-        return xml, [], {CONF_DAQ_XML: "template_mismatch"}, {
+
+    if fmt is None:
+        templates = await hass.async_add_executor_job(load_builtin_templates)
+        detection = detect_template(templates, received)
+        if detection is None:
+            return {}, {CONF_DAQ_XML: "template_required"}, {"received": str(received)}
+        xml, fmt, extras, source = detection.xml, detection.fmt, detection.extras, detection.source
+    else:
+        extras, source = fit_to_stream(fmt, received), TEMPLATE_USER
+
+    frame = None if extras is None else decode_frame(with_stream_extras(fmt, extras), line, dt_util.utcnow())
+    if frame is None:
+        return {}, {CONF_DAQ_XML: "template_mismatch"}, {
             "received": str(received),
             "expected": str(fmt.expected_length),
         }
+    if source != TEMPLATE_USER and not plausible(frame):
+        _LOGGER.warning("Shipped template %s fits by length but gives implausible values", source)
+        return {}, {CONF_DAQ_XML: "template_required"}, {"received": str(received)}
     if extras:
         _LOGGER.info("Stream has %s values more than the template, applying known correction", len(extras))
-    return xml, list(extras), {}, {}
+    return {
+        CONF_HOST: user_input[CONF_HOST],
+        CONF_PORT: user_input[CONF_PORT],
+        CONF_DAQ_XML: xml,
+        CONF_STREAM_EXTRAS: list(extras),
+        CONF_TEMPLATE_SOURCE: source,
+    }, {}, {}
 
 
 def model_info(installation: dict[str, Any]) -> tuple[str | None, float | None]:
@@ -181,17 +207,11 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = user_input[CONF_HOST].strip()
             await self.async_set_unique_id(user_input[CONF_HOST].lower())
             self._abort_if_unique_id_configured()
-            xml, stream_extras, errors, extra = await _validate_local(user_input)
+            local, errors, extra = await _validate_local(self.hass, user_input)
             placeholders.update(extra)
             if not errors:
                 self._title = user_input[CONF_NAME]
-                self._data = {
-                    CONF_HOST: user_input[CONF_HOST].strip(),
-                    CONF_PORT: user_input[CONF_PORT],
-                    CONF_DAQ_XML: xml,
-                    CONF_STREAM_EXTRAS: stream_extras,
-                    CONF_MODEL: DEFAULT_MODEL,
-                }
+                self._data = {**local, CONF_MODEL: DEFAULT_MODEL}
                 return await self.async_step_cloud()
 
         return self.async_show_form(
@@ -276,22 +296,17 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
             new_id = user_input[CONF_HOST].lower()
             if any(e.unique_id == new_id and e.entry_id != entry.entry_id for e in self._async_current_entries()):
                 return self.async_abort(reason="already_configured")
-            xml, stream_extras, errors, extra = await _validate_local(user_input)
+            local, errors, extra = await _validate_local(self.hass, user_input)
             placeholders.update(extra)
             if not errors:
-                return self.async_update_reload_and_abort(
-                    entry,
-                    unique_id=new_id,
-                    data_updates={
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_PORT: user_input[CONF_PORT],
-                        CONF_DAQ_XML: xml,
-                        CONF_STREAM_EXTRAS: stream_extras,
-                    },
-                )
+                return self.async_update_reload_and_abort(entry, unique_id=new_id, data_updates=local)
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=_local_schema(user_input or entry.data, False),
+            data_schema=self.add_suggested_values_to_schema(
+                _local_schema(user_input or entry.data, False),
+                # A shipped template is not shown: leaving the field empty keeps auto-detection
+                user_input or {CONF_DAQ_XML: "" if is_builtin(entry.data) else entry.data.get(CONF_DAQ_XML, "")},
+            ),
             errors=errors,
             description_placeholders=placeholders,
         )

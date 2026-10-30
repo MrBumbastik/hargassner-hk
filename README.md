@@ -40,11 +40,10 @@ Beide Integrationen laufen parallel, da sie verschiedene Domains haben.
 ## Voraussetzungen
 
 1. Der Kessel ist per LAN im Heimnetz und hat eine feste IP-Adresse (DHCP-Reservierung im Router).
-2. **DAQ-Template deiner Firmware:** Die Bedeutung der Werte im Datenstrom hängt von der Firmware-Version ab. So bekommst du das Template:
-   1. Am Touch-Tronic die SD-Aufzeichnung aktivieren.
-   2. Eine SD-Karte für ein paar Minuten einstecken.
-   3. Die Datei `DAQ00000.DAQ` am PC in einem Texteditor öffnen.
-   4. Den Block `<DAQPRJ> … </DAQPRJ>` am Dateianfang kopieren (ausführlich: [Kurzanleitung DAQ-Datei](docs/DAQ-Datei.md)). Du kannst auch einfach den ganzen Dateiinhalt einfügen, der Block wird automatisch herausgeschnitten.
+2. **DAQ-Template: meist nicht nötig.** Die Bedeutung der Werte im Datenstrom hängt von Modell und Firmware ab. Für geprüfte Kessel bringt die Integration das Template mit und erkennt es automatisch, das Feld bleibt dann einfach leer. Mitgeliefert ist derzeit:
+   - **Eco-HK, Firmware V30.0HAR.f** (mit und ohne Lagerbestandsberechnung des Kessels)
+
+   Wird dein Kessel nicht erkannt, meldet die Einrichtung das, und du exportierst das Template selbst: **Einstellen → Setup → Dateimanager → DAQ**, neueste Datei, **Export** (ausführlich: [Kurzanleitung DAQ-Datei](docs/DAQ-Datei.md)). Bitte schick es dann auch als Issue, damit es für alle mitgeliefert werden kann.
 
 Bei der Einrichtung liest die Integration eine Live-Zeile vom Kessel und prüft, ob das Template dazu passt.
 
