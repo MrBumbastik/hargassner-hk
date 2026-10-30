@@ -1,20 +1,21 @@
 # Hargassner HK – Home Assistant Integration für Hackgutkessel
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-![Status](https://img.shields.io/badge/Status-ungetestet-red.svg)
+![Status](https://img.shields.io/badge/Status-Beta%20(1%20Anlage)-yellow.svg)
 ![Vibecoded](https://img.shields.io/badge/vibecoded-KI--generiert-blueviolet.svg)
 
 > [!WARNING]
-> **Früher, ungetesteter Stand (v0.1.0). Bitte lesen, bevor du es installierst.**
+> **Beta (v0.8.0): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
 >
-> - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft.
-> - **Ungetestet:** Die Integration lief noch an **keinem echten Kessel**. Es gibt automatische Tests, aber die laufen nur gegen einen simulierten Kessel und nachgebaute Cloud-Daten.
-> - Die Eco-HK-spezifischen Teile, also Kanalnamen sowie Zustands- und Störungscodes, sind **Annahmen**. Sie stammen von der Pellet-Steuerung derselben Gerätefamilie.
-> - Die Cloud-Funktionen können **Werte in deinen Kessel schreiben**, zum Beispiel Sollwerte, Betriebsarten und das Kesselprogramm. Das ist **standardmäßig gesperrt** und muss in den Optionen ausdrücklich erlaubt werden („Werte über die Cloud ändern erlauben“). Schalte es erst ein, wenn du die Integration an deinem Kessel geprüft hast. Die Verantwortung liegt bei dir.
+> - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft. Es gibt rund 85 automatische Tests und eine CI (Tests, hassfest, HACS-Prüfung).
+> - **Getestet an einem Eco-HK 50, Firmware V30.0HAR.f:** Lokaler Datenstrom und Cloud laufen dort produktiv und haben die bisherigen Hargassner-Integrationen samt Dashboard und Energie-Dashboard ersetzt. Die Messwerte wurden mit der Hargassner-Cloud abgeglichen. Ein Schreibtest über die Cloud (Warmwasser-Solltemperatur ändern und zurücksetzen) war erfolgreich.
+> - **Andere Modelle und Firmwares sind ungetestet.** Kanalzuordnung, Zustands- und Störungscodes können dort abweichen.
+> - **Noch nicht verifiziert, auch am Eco-HK 50 nicht:** die Zustandscodes für Startvorbereitung und Zündung (bisher nur „Aus“, „Leistungsbrand“ und „Abbrand“ zugeordnet) sowie die Störungscodes. Die Störungscodes stammen von der Pellet-Steuerung derselben Gerätefamilie.
+> - Die Cloud-Funktionen können **Werte in deinen Kessel schreiben**, zum Beispiel Sollwerte, Betriebsarten und das Kesselprogramm. Das ist **standardmäßig gesperrt** und muss in den Optionen ausdrücklich erlaubt werden („Werte über die Cloud ändern erlauben“). Die Verantwortung liegt bei dir.
 >
-> Ausprobieren, Fehlerberichte und Diagnosedaten von echten Anlagen sind sehr willkommen. Für den produktiven Einsatz ist der Stand noch **nicht** gedacht.
+> Rückmeldungen von weiteren Anlagen sind sehr willkommen, vor allem Diagnosedaten und Zustandscodes mit dem zugehörigen Displaytext.
 
-> **English:** Unofficial Home Assistant integration for Hargassner wood chip boilers (Eco-HK). Early, **untested and vibecoded (AI-generated)**. It has never run against a real boiler. Use at your own risk; bug reports welcome.
+> **English:** Unofficial Home Assistant integration for Hargassner wood chip boilers (Eco-HK). **Beta, vibecoded (AI-generated).** In daily use on one Eco-HK 50 (firmware V30.0HAR.f), values cross-checked against the Hargassner cloud; other models/firmwares are untested. Use at your own risk; bug reports welcome.
 
 Inoffizielle Integration für **Hargassner Hackschnitzelkessel (Eco-HK)** mit Touch-Tronic-Steuerung.
 
@@ -33,9 +34,17 @@ Inoffizielle Integration für **Hargassner Hackschnitzelkessel (Eco-HK)** mit To
 | Hackgut-spezifisch | – | Saugzug, O₂, Rauchgas, Motorströme (Raumaustragung, Ascheaustragung, Schieberost), Störungstexte |
 | Verbrauch | Lagerstand in kg (aus der Cloud) | Wärme in kWh, Verbrauch in kg/SRM, Lagerstand, Reichweite |
 | Sprache | Namen fest auf Französisch | Übersetzungen Deutsch/Englisch |
-| Fehlerfälle | – | Reconfigure nach Firmware-Update, Reauth, Diagnostics |
+| Betriebsstunden | – | je Komponente, mit Statistik, abgleichbar mit dem Display |
+| Fehlerfälle | – | Neu konfigurieren (lokal / Cloud getrennt), Reauth bei falschem Passwort, Diagnosedaten |
 
 Beide Integrationen laufen parallel, da sie verschiedene Domains haben.
+
+### Umstieg von einer anderen Hargassner-Integration
+
+1. `hargassner_hk` zusätzlich einrichten und ein paar Tage parallel laufen lassen.
+2. Dashboards, Automationen, Skripte und das Energie-Dashboard auf die neuen Entitäten umstellen. Die Wärme fürs Energie-Dashboard liefert **Erzeugte Wärme** (kWh, `total_increasing`).
+3. Betriebsstunden-Zählerstände einmalig vom Kesseldisplay übernehmen (Aktion `hargassner_hk.set_operating_hours`).
+4. Die alte Integration zunächst nur **deaktivieren**. Beim Löschen geht deren Verlauf verloren, auch die bisherige Wärmemenge im Energie-Dashboard.
 
 ## Voraussetzungen
 
@@ -51,9 +60,11 @@ Bei der Einrichtung liest die Integration eine Live-Zeile vom Kessel und prüft,
 
 **HACS:** HACS → Integrationen → ⋮ → Benutzerdefinierte Repositories → dieses Repo als *Integration* hinzufügen → „Hargassner HK“ installieren → Home Assistant neu starten.
 
+Die Installation über HACS ist optional.
+
 **Manuell:** `custom_components/hargassner_hk/` nach `config/custom_components/` kopieren und Home Assistant neu starten.
 
-Danach: Einstellungen → Geräte & Dienste → Integration hinzufügen → **Hargassner HK**.
+Danach: Einstellungen → Geräte & Dienste → Integration hinzufügen → **Hargassner HK**. Die IP-Adresse ist Pflicht. E-Mail und Passwort des Hargassner-Kontos sind optional: Sind sie angegeben, wird die Cloud mit eingerichtet. Nachträglich geht das über ⋮ → **Neu konfigurieren** → **Hargassner-Cloud-Login**.
 
 ## Einstellungen (Optionen)
 
@@ -61,7 +72,7 @@ Danach: Einstellungen → Geräte & Dienste → Integration hinzufügen → **Ha
 |---|---|---|
 | Aktualisierungsintervall lokal | 10 s | Der Kessel sendet jede Sekunde. HA übernimmt nur alle *n* Sekunden einen Wert, damit die Datenbank nicht unnötig wächst. |
 | Kanal für Kesselleistung | `Leistung` | Kanal in % der Nennleistung, Grundlage der Wärme- und Verbrauchsberechnung |
-| Nennleistung | 30 kW | laut Typenschild |
+| Nennleistung | 30 kW | laut Typenschild; mit Cloud wird sie aus dem Modellnamen übernommen |
 | Heizwert | 3,4 kWh/kg | Fichte W30. Faustwerte: W20 ≈ 4,0, W40 ≈ 2,8 |
 | Schüttdichte | 210 kg/SRM | Fichte W30 ≈ 200–230, Buche ≈ 300–340 |
 | Wirkungsgrad | 90 % | |
@@ -92,17 +103,17 @@ data:
   amount: 30   # SRM
 ```
 
-Beispiel-Automation für eine Warnung bei niedrigem Lager:
+Beispiel-Automation für eine Warnung bei niedrigem Lager (die Entitäts-ID hängt vom Gerätenamen ab):
 
 ```yaml
 triggers:
   - trigger: numeric_state
-    entity_id: sensor.eco_hk_reichweite_lager
+    entity_id: sensor.hargassner_eco_hk_reichweite_lager
     below: 14
 actions:
   - action: notify.notify
     data:
-      message: "Hackgut reicht noch etwa {{ states('sensor.eco_hk_reichweite_lager') | int }} Tage."
+      message: "Hackgut reicht noch etwa {{ states('sensor.hargassner_eco_hk_reichweite_lager') | int }} Tage."
 ```
 
 ## Entitäten
@@ -110,7 +121,7 @@ actions:
 - **Sensoren:** alle Analogkanäle des Templates. Bekannte Kanäle (TK, TRG, O2, SZist, Leistung, Puffer, Vorläufe …) haben deutsche Namen. Motorströme und unbekannte Kanäle ohne °C-Einheit sind standardmäßig deaktiviert, du kannst sie bei Bedarf aktivieren.
 - **Kesselzustand** mit dem Rohcode als Attribut. Beim Eco-HK: „Aus“ (1) und „Leistungsbrand“ (5) am Display bestätigt, „Abbrand“ (7) aus einem Mitschnitt abgeleitet (Förderung aus, Restsauerstoff steigt auf Luftwert, danach „Aus“). Andere Codes erscheinen als „Sonstiger Zustand“, bis sie zugeordnet sind (bitte melden: Code + Displaytext).
 - **Brenner aktiv** (und Brenner-Betriebsstunden) folgt beim Hackgutkessel dem kesseleigenen Bit „Feuerung aktiv (F2)“, dazu Leistungsbrand oder Zündheizung.
-- **Betriebsstunden** je Komponente (Brenner, Zündung, Saugzug, Einschub, Austragungen, Roste, Putzmotor, Pumpen) mit Statistik pro Tag/Woche/Monat; Zählerstände für den Abgleich mit dem Kesseldisplay (Aktion `hargassner_hk.set_operating_hours`).
+- **Betriebsstunden** je Komponente (Brenner, Zündung, Saugzug, Einschub, Austragungen, Roste, Putzmotor, Pumpen). Die Integration zählt sie selbst aus dem Datenstrom, denn der Kessel sendet dort nur den Zähler der Einschubschnecke mit. *Betriebsstunden …* zählen ab Installation und liefern Statistik pro Tag/Woche/Monat. *Zählerstand …* = Startwert + gezählte Stunden, zum Abgleich mit dem Kesseldisplay (Startwert einmalig per Aktion `hargassner_hk.set_operating_hours`).
 - **Störung** als Text mit Code, dazu der Binärsensor *Störung aktiv*.
 - **Binärsensoren:** Digitalkanäle wie Pumpen und Störmeldung, *Brenner aktiv*, lokale Verbindung und Cloud-Verbindung.
 - **Mit Cloud:**
@@ -133,7 +144,7 @@ Geprüft an einem Eco-HK 50 mit Firmware V30.0HAR.f:
 
 ## Bekannte Grenzen / bitte melden
 
-- **Erster Live-Test bestanden (Eco-HK 50, V30.0HAR.f):** Der Datenstrom wird gelesen, die Werte stimmen mit der Cloud überein. Der Strom enthält bei dieser Firmware **3 Werte mehr**, als das DAQ-Template beschreibt. Die Integration erkennt das und korrigiert es automatisch. Bei anderen Modellen oder Firmwares kann eine ähnliche Abweichung auftreten. Dann meldet die Einrichtung „Template passt nicht“. Bitte als Issue melden, mit der Wertanzahl aus der Fehlermeldung.
+- **Eco-HK 50, V30.0HAR.f:** Der Datenstrom enthält bei dieser Firmware **3 Werte mehr**, als das DAQ-Template beschreibt. Die Integration erkennt das und korrigiert es automatisch. Bei anderen Modellen oder Firmwares kann eine ähnliche Abweichung auftreten. Dann meldet die Einrichtung „Template passt nicht“. Bitte als Issue melden, mit der Wertanzahl aus der Fehlermeldung.
 - Auf Hackgutkesseln sind `Stb`, `NotAus` und die Sicherheitsschalter `SK_*` Ruhestromkontakte: Bit gesetzt heißt „alles in Ordnung“. Die Integration invertiert sie.
 
 - Die **Störungscodes** stammen aus der Pellet-Firmware (Nano-PK) derselben Steuerungsfamilie und sind **für den Eco-HK nicht verifiziert**; die Zustandscodes des Eco-HK sind teilweise zugeordnet (siehe oben). Unbekannte Zustände erscheinen als „Sonstiger Zustand“ und unbekannte Störungen als „Störung &lt;Nr&gt;“, jeweils mit dem Code als Attribut. Bitte melde fehlende Codes.
