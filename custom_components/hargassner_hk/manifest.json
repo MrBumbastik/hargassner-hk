@@ -10,5 +10,5 @@
   "issue_tracker": "https://github.com/MrBumbastik/hargassner-hk/issues",
   "loggers": ["custom_components.hargassner_hk"],
   "requirements": [],
-  "version": "0.5.0"
+  "version": "0.6.0"
 }

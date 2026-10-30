@@ -62,5 +62,8 @@ UNIT_SRM = "SRM"
 # Services
 SERVICE_REFILL = "refill"
 SERVICE_SET_STORAGE = "set_storage"
+SERVICE_SET_OPERATING_HOURS = "set_operating_hours"
+ATTR_COMPONENT = "component"
+ATTR_HOURS = "hours"
 ATTR_AMOUNT = "amount"
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"

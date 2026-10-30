@@ -252,6 +252,57 @@
       },
       "room_temperature_target": {
         "name": "Room target temperature circuit {number}"
+      },
+      "hours_burner": {
+        "name": "Operating hours Burner"
+      },
+      "hours_full_firing": {
+        "name": "Operating hours Full firing"
+      },
+      "hours_ignition": {
+        "name": "Operating hours Ignition"
+      },
+      "hours_draft_fan": {
+        "name": "Operating hours Induced draft fan"
+      },
+      "hours_feed_screw": {
+        "name": "Operating hours Feed screw"
+      },
+      "hours_room_discharge": {
+        "name": "Operating hours Room discharge"
+      },
+      "hours_ash_discharge": {
+        "name": "Operating hours Ash discharge"
+      },
+      "hours_feed_grate": {
+        "name": "Operating hours Feed grate"
+      },
+      "hours_ash_grate": {
+        "name": "Operating hours Ash grate"
+      },
+      "hours_cleaning_motor": {
+        "name": "Operating hours Cleaning motor"
+      },
+      "hours_circuit_pump_1": {
+        "name": "Operating hours Circuit pump 1"
+      },
+      "hours_circuit_pump_2": {
+        "name": "Operating hours Circuit pump 2"
+      },
+      "counter_burner": {
+        "name": "Counter Burner"
+      },
+      "counter_ignition": {
+        "name": "Counter Ignition"
+      },
+      "counter_draft_fan": {
+        "name": "Counter Induced draft fan"
+      },
+      "counter_room_discharge": {
+        "name": "Counter Room discharge"
+      },
+      "feed_screw_counter_boiler": {
+        "name": "Feed screw counter (boiler)"
       }
     },
     "binary_sensor": {
@@ -399,6 +450,9 @@
     },
     "cloud_write_disabled": {
       "message": "Changing values via the Hargassner cloud is disabled. Enable \"Allow changing values via the cloud\" in the integration options."
+    },
+    "unknown_component": {
+      "message": "Unknown component for operating hours."
     }
   },
   "services": {
@@ -427,6 +481,24 @@
         "amount": {
           "name": "Storage level",
           "description": "Current storage level in SRM."
+        }
+      }
+    },
+    "set_operating_hours": {
+      "name": "Set operating hours counter",
+      "description": "Aligns a component's counter with the boiler display. The counted hours (statistics) are not changed.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Boiler",
+          "description": "Boiler entry."
+        },
+        "component": {
+          "name": "Component",
+          "description": "burner, ignition, draft_fan, room_discharge"
+        },
+        "hours": {
+          "name": "Hours",
+          "description": "Counter value shown by the boiler."
         }
       }
     }

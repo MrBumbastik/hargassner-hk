@@ -23,6 +23,8 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 
 ## P2: während und nach dem ersten Test
 
+- [x] **Betriebsstunden (v0.6.0):** pro Komponente sekundengenau aus dem Live-Strom gezählt (`runtime.py`), `total_increasing` → HA-Statistik pro Tag/Woche/Monat. „Zählerstand …“ (Startwert + gezählt, ohne Statistik) für Brenner, Zündung, Saugzug, Raumaustragung; Aktion `set_operating_hours`. Einschub-Zählerstand direkt vom Kessel (`BSZ_ES_PEL`). Offen: echte Laufzeiten im Brennbetrieb gegen Kesseldisplay prüfen.
+
 - [ ] **Raumtemperatur TRA_x ist ohne Raumfühler ein Platzhalter (20,0 °C)**, auch bei nicht vorhandenen Heizkreisen. Sensor standardmäßig deaktivieren oder 20,0 bei fehlendem Fühler als „unbekannt“ melden. Klären, ob ein Fühler-Status existiert (FR_x Zustand?).
 - [x] **Cloud nachträglich aktivieren (v0.5.0):** Neu konfigurieren → Hargassner-Cloud. Bugfix: Im Einrichtungsdialog hat ein standardmäßig ausgeschalteter Schalter eingegebene Zugangsdaten verworfen; der Schalter ist entfernt. Falsches Passwort (OAuth 400 `invalid_grant`) wird jetzt als Anmeldefehler erkannt. Live gegen das echte Konto geprüft.
   - Ursprünglich: Derzeit nur bei der Ersteinrichtung möglich. Für die Ablösung der alten Cloud-Integration (Thermostate, Sollwerte, Betriebsart) einen Weg über Reconfigure oder Optionen anbieten.

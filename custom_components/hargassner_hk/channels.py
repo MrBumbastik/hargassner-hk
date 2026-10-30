@@ -85,6 +85,8 @@ ANALOG: dict[str, SensorMeta] = {
     "etue": SensorMeta(None, "mdi:thermometer-alert"),  # temperature monitoring feed channel
     "effizienz": SensorMeta(None, "mdi:percent"),
     # Bulk counters / internals of the Eco-HK, mostly for diagnostics
+    # Raw stream value: no total_increasing, a single garbled frame would count as a meter reset
+    "bsz_es_pel": SensorMeta("feed_screw_counter_boiler", "mdi:counter"),
     "programm": SensorMeta(None, enabled=False),
     "puffzustand": SensorMeta(None, enabled=False),
     "trl": SensorMeta("return_temperature"),

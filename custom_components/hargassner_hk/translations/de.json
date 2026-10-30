@@ -252,6 +252,57 @@
       },
       "room_temperature_target": {
         "name": "Raum-Solltemperatur Heizkreis {number}"
+      },
+      "hours_burner": {
+        "name": "Betriebsstunden Brenner"
+      },
+      "hours_full_firing": {
+        "name": "Betriebsstunden Leistungsbrand"
+      },
+      "hours_ignition": {
+        "name": "Betriebsstunden Zündung"
+      },
+      "hours_draft_fan": {
+        "name": "Betriebsstunden Saugzug"
+      },
+      "hours_feed_screw": {
+        "name": "Betriebsstunden Einschub"
+      },
+      "hours_room_discharge": {
+        "name": "Betriebsstunden Raumaustragung"
+      },
+      "hours_ash_discharge": {
+        "name": "Betriebsstunden Ascheaustragung"
+      },
+      "hours_feed_grate": {
+        "name": "Betriebsstunden Einschubrost"
+      },
+      "hours_ash_grate": {
+        "name": "Betriebsstunden Ascherost"
+      },
+      "hours_cleaning_motor": {
+        "name": "Betriebsstunden Putzmotor"
+      },
+      "hours_circuit_pump_1": {
+        "name": "Betriebsstunden Heizkreispumpe 1"
+      },
+      "hours_circuit_pump_2": {
+        "name": "Betriebsstunden Heizkreispumpe 2"
+      },
+      "counter_burner": {
+        "name": "Zählerstand Brenner"
+      },
+      "counter_ignition": {
+        "name": "Zählerstand Zündung"
+      },
+      "counter_draft_fan": {
+        "name": "Zählerstand Saugzug"
+      },
+      "counter_room_discharge": {
+        "name": "Zählerstand Raumaustragung"
+      },
+      "feed_screw_counter_boiler": {
+        "name": "Einschub-Zähler (Kessel)"
       }
     },
     "binary_sensor": {
@@ -399,6 +450,9 @@
     },
     "cloud_write_disabled": {
       "message": "Das Ändern von Werten über die Hargassner-Cloud ist deaktiviert. Aktiviere „Werte über die Cloud ändern erlauben“ in den Optionen der Integration."
+    },
+    "unknown_component": {
+      "message": "Unbekannte Komponente für Betriebsstunden."
     }
   },
   "services": {
@@ -427,6 +481,24 @@
         "amount": {
           "name": "Lagerstand",
           "description": "Aktueller Lagerstand in SRM."
+        }
+      }
+    },
+    "set_operating_hours": {
+      "name": "Zählerstand Betriebsstunden setzen",
+      "description": "Gleicht den Zählerstand einer Komponente mit dem Kesseldisplay ab. Die gezählten Stunden (Statistik) bleiben unverändert.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Kessel",
+          "description": "Kessel-Eintrag."
+        },
+        "component": {
+          "name": "Komponente",
+          "description": "burner, ignition, draft_fan, room_discharge"
+        },
+        "hours": {
+          "name": "Stunden",
+          "description": "Zählerstand laut Kessel."
         }
       }
     }

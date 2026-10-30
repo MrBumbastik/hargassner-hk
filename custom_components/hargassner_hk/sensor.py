@@ -58,6 +58,12 @@ async def async_setup_entry(
     if local.power_key:
         entities.extend(FuelSensor(local, desc) for desc in FUEL_SENSORS)
 
+    if local.runtime is not None:
+        for counter in local.runtime.counters:
+            entities.append(RuntimeSensor(local, counter.key))
+            if counter.has_boiler_counter:
+                entities.append(CounterSensor(local, counter.key))
+
     entities.append(ConnectionInfoSensor(local))
     async_add_entities(entities)
 
@@ -82,6 +88,8 @@ class AnalogSensor(LocalEntity, SensorEntity):
             self._attr_translation_placeholders = meta.placeholders or {}
         else:
             self._attr_name = channel.name
+        if device_class == SensorDeviceClass.DURATION and meta.translation_key:
+            self._attr_suggested_unit_of_measurement = UnitOfTime.HOURS  # e.g. feed screw counter (min)
         if device_class is None and unit is None:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
@@ -291,3 +299,51 @@ class ConnectionInfoSensor(LocalEntity, SensorEntity):
             "expected_length": client.fmt.expected_length,
             "last_error": client.last_error,
         }
+
+
+class RuntimeSensor(LocalEntity, SensorEntity):
+    """Operating hours counted since installation (basis for hours per day/week/month)."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.HOURS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_suggested_display_precision = 1
+    _attr_icon = "mdi:timer-outline"
+
+    def __init__(self, coordinator: LocalCoordinator, key: str) -> None:
+        super().__init__(coordinator, f"hours_{key}")
+        self._key = key
+        self._attr_translation_key = f"hours_{key}"
+
+    @property
+    def available(self) -> bool:
+        return True  # totals stay valid while the stream is down
+
+    @property
+    def native_value(self) -> float:
+        return round(self.coordinator.runtime.hours(self._key), 3)
+
+
+class CounterSensor(LocalEntity, SensorEntity):
+    """Boiler-style counter: start value from the boiler + counted hours (display only)."""
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.HOURS
+    _attr_suggested_display_precision = 1
+    _attr_icon = "mdi:counter"
+    # No state_class on purpose: setting the start value would otherwise show up as
+    # thousands of hours on a single day in the statistics.
+
+    def __init__(self, coordinator: LocalCoordinator, key: str) -> None:
+        super().__init__(coordinator, f"counter_{key}")
+        self._key = key
+        self._attr_translation_key = f"counter_{key}"
+
+    @property
+    def available(self) -> bool:
+        return self.coordinator.runtime.counter_hours(self._key) is not None
+
+    @property
+    def native_value(self) -> float | None:
+        value = self.coordinator.runtime.counter_hours(self._key)
+        return None if value is None else round(value, 1)

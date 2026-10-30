@@ -17,7 +17,9 @@ from homeassistant.helpers.typing import ConfigType
 from .cloud import HargassnerCloud
 from .const import (
     ATTR_AMOUNT,
+    ATTR_COMPONENT,
     ATTR_CONFIG_ENTRY_ID,
+    ATTR_HOURS,
     CONF_ALLOW_CLOUD_WRITE,
     CONF_BULK_DENSITY,
     CONF_CALORIFIC_VALUE,
@@ -41,9 +43,11 @@ from .const import (
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
     SERVICE_REFILL,
+    SERVICE_SET_OPERATING_HOURS,
     SERVICE_SET_STORAGE,
 )
-from .coordinator import CloudCoordinator, LocalCoordinator, fuel_store
+from .coordinator import CloudCoordinator, LocalCoordinator, fuel_store, runtime_store
+from .runtime import RuntimeTracker, available_counters
 from .daq import DaqFormat, DaqFormatError, fit_to_stream, parse_daq_xml, with_stream_extras
 from .templates import detect_template, is_builtin, load_builtin_templates
 from .fuel import FuelSettings, FuelTracker
@@ -118,6 +122,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await local.async_save_fuel_now()
         local.async_update_listeners()
 
+    async def _set_counter(call: ServiceCall) -> None:
+        local = _local(call)
+        if not local.runtime.has_counter(call.data[ATTR_COMPONENT]):
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="unknown_component")
+        local.runtime.set_counter(call.data[ATTR_COMPONENT], call.data[ATTR_HOURS])
+        await local.async_save_fuel_now()
+        local.async_update_listeners()
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_OPERATING_HOURS,
+        _set_counter,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+                vol.Required(ATTR_COMPONENT): cv.string,
+                vol.Required(ATTR_HOURS): vol.All(vol.Coerce(float), vol.Range(min=0, max=1_000_000)),
+            }
+        ),
+    )
     hass.services.async_register(DOMAIN, SERVICE_REFILL, _refill, schema=SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_SET_STORAGE, _set_storage, schema=SERVICE_SCHEMA)
     return True
@@ -140,7 +164,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry)
     store = fuel_store(hass, entry.entry_id)
     fuel = FuelTracker(fuel_settings(entry), await store.async_load())
 
-    client = HargassnerTelnet(entry.data[CONF_HOST], entry.data.get(CONF_PORT, DEFAULT_PORT), fmt)
+    rt_store = runtime_store(hass, entry.entry_id)
+    runtime = RuntimeTracker(
+        available_counters({ch.key for ch in fmt.analog}, {ch.key for ch in fmt.digital}),
+        await rt_store.async_load(),
+    )
+    # Every frame (~1/s) goes to the operating hours: short feed screw pulses would be missed otherwise
+    client = HargassnerTelnet(
+        entry.data[CONF_HOST], entry.data.get(CONF_PORT, DEFAULT_PORT), fmt, on_frame=runtime.add_frame
+    )
     client.start()
     if not await client.wait_for_frame(FIRST_FRAME_TIMEOUT):
         await client.stop()
@@ -184,6 +216,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry)
             store,
             power_channel.key if power_channel else None,
             int(entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)),
+            runtime,
+            rt_store,
         )
         await local.async_config_entry_first_refresh()
 
@@ -238,3 +272,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Delete the stored fuel data with the entry."""
     await fuel_store(hass, entry.entry_id).async_remove()
+    await runtime_store(hass, entry.entry_id).async_remove()

@@ -17,6 +17,7 @@ from .cloud import CloudAuthError, CloudError, HargassnerCloud
 from .const import CONF_ALLOW_CLOUD_WRITE, DEFAULT_ALLOW_CLOUD_WRITE, DOMAIN, FRAME_STALE_AFTER
 from .daq import Frame
 from .fuel import FuelTracker
+from .runtime import RuntimeTracker
 from .telnet import HargassnerTelnet
 
 if TYPE_CHECKING:
@@ -31,6 +32,11 @@ STORAGE_SAVE_DELAY = 60
 def fuel_store(hass: HomeAssistant, entry_id: str) -> Store[dict[str, Any]]:
     """Persistent storage for the fuel tracker."""
     return Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}.fuel")
+
+
+def runtime_store(hass: HomeAssistant, entry_id: str) -> Store[dict[str, Any]]:
+    """Persistent storage for the operating hours."""
+    return Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry_id}.runtime")
 
 
 class LocalCoordinator(DataUpdateCoordinator[Frame]):
@@ -51,6 +57,8 @@ class LocalCoordinator(DataUpdateCoordinator[Frame]):
         store: Store[dict[str, Any]],
         power_key: str | None,
         interval: int,
+        runtime: RuntimeTracker,
+        runtime_storage: Store[dict[str, Any]],
     ) -> None:
         super().__init__(
             hass,
@@ -63,7 +71,10 @@ class LocalCoordinator(DataUpdateCoordinator[Frame]):
         self.fuel = fuel
         self.power_key = power_key
         self._store = store
+        self.runtime = runtime
+        self._runtime_store = runtime_storage
         self._last_save = time.monotonic()
+        self._fuel_changed = False
 
     def save_fuel(self) -> None:
         # Store.async_delay_save re-arms its timer on every call, so calling it each
@@ -71,10 +82,16 @@ class LocalCoordinator(DataUpdateCoordinator[Frame]):
         now = time.monotonic()
         if now - self._last_save >= STORAGE_SAVE_DELAY:
             self._last_save = now
-            self._store.async_delay_save(self.fuel.as_dict, 1)
+            if self._fuel_changed:
+                self._fuel_changed = False
+                self._store.async_delay_save(self.fuel.as_dict, 1)
+            if self.runtime.changed:
+                self.runtime.changed = False
+                self._runtime_store.async_delay_save(self.runtime.as_dict, 1)
 
     async def async_save_fuel_now(self) -> None:
         await self._store.async_save(self.fuel.as_dict())
+        await self._runtime_store.async_save(self.runtime.as_dict())
 
     async def _async_update_data(self) -> Frame:
         frame = self.client.latest
@@ -91,7 +108,8 @@ class LocalCoordinator(DataUpdateCoordinator[Frame]):
 
         power = frame.analog.get(self.power_key) if self.power_key else None
         if self.fuel.add_sample(power if isinstance(power, float) else None, now):
-            self.save_fuel()
+            self._fuel_changed = True
+        self.save_fuel()  # throttled to once a minute; writes only what changed
         return frame
 
 

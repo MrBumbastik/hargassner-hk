@@ -33,3 +33,30 @@ set_storage:
           step: 0.5
           unit_of_measurement: SRM
           mode: box
+
+set_operating_hours:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: hargassner_hk
+    component:
+      required: true
+      selector:
+        select:
+          options:
+            - burner
+            - ignition
+            - draft_fan
+            - room_discharge
+    hours:
+      required: true
+      example: 6749
+      selector:
+        number:
+          min: 0
+          max: 1000000
+          step: 0.1
+          unit_of_measurement: h
+          mode: box
