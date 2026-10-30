@@ -155,3 +155,7 @@ Die Tests simulieren den Kessel mit einem lokalen TCP-Server.
 ## Danksagung
 
 Das Telnet-Protokoll und das DAQ-Template-Format sind dokumentiert in [TheRealKillaruna/nano_pk](https://github.com/TheRealKillaruna/nano_pk) (Apache-2.0). Den Cloud-API-Zugang hat [lithium73fr/hargassner-ha](https://github.com/lithium73fr/hargassner-ha) erarbeitet.
+
+## Lizenz
+
+[Apache-2.0](LICENSE). Der Code ist ohne jede Gewährleistung, siehe Lizenztext.
