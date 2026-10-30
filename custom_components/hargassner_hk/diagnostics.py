@@ -8,9 +8,10 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from . import HargassnerHKConfigEntry
-from .const import CONF_DAQ_XML, CONF_INSTALLATION_ID
+from .const import CONF_DAQ_XML, CONF_INSTALLATION_ID, CONF_INSTALLATION_NAME
 
-TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, CONF_INSTALLATION_ID}
+# Installation and circuit names are user-chosen and often contain personal names.
+TO_REDACT = {CONF_EMAIL, CONF_PASSWORD, CONF_INSTALLATION_ID, CONF_INSTALLATION_NAME, "name"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -47,7 +48,12 @@ async def async_get_config_entry_diagnostics(
             "last_update_success": cloud.last_update_success,
             "online": cloud.data.online if cloud.data else None,
             "widgets": {
-                wid: {"type": w["type"], "values": w["values"], "parameters": sorted(w["parameters"])}
+                wid: {
+                    "type": w["type"],
+                    "values": async_redact_data(w["values"], TO_REDACT),
+                    "parameters": sorted(w["parameters"]),
+                    "actions": sorted(w["actions"]),
+                }
                 for wid, w in (cloud.data.widgets.items() if cloud.data else [])
             },
         },

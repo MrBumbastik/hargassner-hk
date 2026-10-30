@@ -68,7 +68,10 @@ class HargassnerCloud:
                 if resp.status == 204:
                     return {}
                 if "json" in (resp.content_type or ""):
-                    return await resp.json(content_type=None)
+                    try:
+                        return await resp.json(content_type=None)
+                    except ValueError as err:
+                        raise CloudError(f"Invalid JSON from {path}: {err}") from err
                 return {}
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
             raise CloudError(f"Network error: {err}") from err
@@ -80,7 +83,11 @@ class HargassnerCloud:
             raise CloudAuthError("No access token in response")
         self._access_token = token
         self._refresh_token = inner.get("refresh_token", self._refresh_token)
-        self._expires_at = time.time() + float(inner.get("expires_in", 3600))
+        try:
+            expires_in = float(inner.get("expires_in") or 3600)
+        except (TypeError, ValueError):
+            expires_in = 3600.0
+        self._expires_at = time.time() + expires_in
 
     async def login(self) -> None:
         """Log in with email and password."""

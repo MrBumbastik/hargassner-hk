@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
@@ -62,9 +63,15 @@ class LocalCoordinator(DataUpdateCoordinator[Frame]):
         self.fuel = fuel
         self.power_key = power_key
         self._store = store
+        self._last_save = time.monotonic()
 
     def save_fuel(self) -> None:
-        self._store.async_delay_save(self.fuel.as_dict, STORAGE_SAVE_DELAY)
+        # Store.async_delay_save re-arms its timer on every call, so calling it each
+        # update tick would postpone the write forever. Schedule at most once per delay.
+        now = time.monotonic()
+        if now - self._last_save >= STORAGE_SAVE_DELAY:
+            self._last_save = now
+            self._store.async_delay_save(self.fuel.as_dict, 1)
 
     async def async_save_fuel_now(self) -> None:
         await self._store.async_save(self.fuel.as_dict())
@@ -137,7 +144,11 @@ class CloudCoordinator(DataUpdateCoordinator[CloudData]):
             # Stable id: type + number, independent of the user-editable name
             widget_id = f"{widget_type}_{number}".lower().rstrip("_")
             if widget_id in result:
-                widget_id = f"{widget_id}_{len(result)}"
+                # "_dup" cannot collide with a real "<type>_<number>" id
+                n = 2
+                while f"{widget_id}_dup{n}" in result:
+                    n += 1
+                widget_id = f"{widget_id}_dup{n}"
             result[widget_id] = {
                 "type": widget_type,
                 "number": number,

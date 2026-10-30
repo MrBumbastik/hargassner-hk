@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HargassnerHKConfigEntry
@@ -123,5 +124,5 @@ class CircuitClimate(CloudEntity, ClimateEntity):
         value = {HVACMode.OFF: MODE_OFF, HVACMode.HEAT: MODE_HEATING}.get(hvac_mode, MODE_AUTOMATIC)
         options = param.get("options") or []
         if options and value not in options:
-            value = MODE_AUTOMATIC
+            raise ServiceValidationError(f"Mode {value} is not supported by this heating circuit ({', '.join(options)})")
         await self.coordinator.async_set_value(param["resource"], value)

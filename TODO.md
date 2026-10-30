@@ -19,7 +19,7 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 - [ ] **Nur eine Telnet-Verbindung:** Prüfen, ob der Touch-Tronic parallele Verbindungen erlaubt. Falls nicht, im Reconfigure-Flow den laufenden Client wiederverwenden, statt eine zweite Verbindung zu öffnen.
 - [ ] **Hintergrund-Task sauber anbinden:** `entry.async_create_background_task` statt `asyncio.create_task` verwenden, damit HA den Task beim Herunterfahren zuverlässig beendet.
 - [x] **Code-Review** (`/code-review high`, 30.10.): 10 Befunde
-- [ ] **Review-Befunde beheben:** (1) Fuel-Store wird bei laufendem Brenner nie gespeichert, (2) Reconfigure aktualisiert die unique_id nicht, (3) Diagnose zeigt den Anlagennamen, (4) Telnet-Task läuft bei Setup-Fehler weiter, (5) Climate „Aus“ wird still zu Automatik, (6) Widget-ID-Kollisionen, (7) kaputte Cloud-Antworten als unbekannter Fehler, (8) ValueError im Config-Flow, (9) Host nicht getrimmt, (10) doppeltes Neuladen
+- [x] **Review-Befunde behoben (30.10.):** (1) Fuel-Store wird bei laufendem Brenner nie gespeichert, (2) Reconfigure aktualisiert die unique_id nicht, (3) Diagnose zeigt den Anlagennamen, (4) Telnet-Task läuft bei Setup-Fehler weiter, (5) Climate „Aus“ wird still zu Automatik, (6) Widget-ID-Kollisionen, (7) kaputte Cloud-Antworten als unbekannter Fehler, (8) ValueError im Config-Flow, (9) Host nicht getrimmt, (10) doppeltes Neuladen
 
 ## P2: während und nach dem ersten Test
 

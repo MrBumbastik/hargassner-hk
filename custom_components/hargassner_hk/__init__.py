@@ -74,6 +74,7 @@ class HargassnerHKData:
     fmt: DaqFormat
     local: LocalCoordinator
     cloud: CloudCoordinator | None
+    options: dict
 
 
 type HargassnerHKConfigEntry = ConfigEntry[HargassnerHKData]
@@ -146,40 +147,48 @@ async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry)
             reason = client.last_error or "no pm line received"
         raise ConfigEntryNotReady(f"No valid data from {client.host}:{client.port}: {reason}")
 
-    local = LocalCoordinator(
-        hass,
-        entry,
-        client,
-        fuel,
-        store,
-        power_channel.key if power_channel else None,
-        int(entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)),
-    )
-    await local.async_config_entry_first_refresh()
-
-    cloud: CloudCoordinator | None = None
-    if entry.data.get(CONF_USE_CLOUD):
-        api = HargassnerCloud(async_get_clientsession(hass), entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
-        cloud = CloudCoordinator(
+    # From here on the telnet task runs; stop it if anything below fails (incl. cancellation),
+    # otherwise every setup retry would leave another connection open.
+    try:
+        local = LocalCoordinator(
             hass,
             entry,
-            api,
-            str(entry.data[CONF_INSTALLATION_ID]),
-            int(entry.options.get(CONF_CLOUD_INTERVAL, DEFAULT_CLOUD_INTERVAL)),
+            client,
+            fuel,
+            store,
+            power_channel.key if power_channel else None,
+            int(entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)),
         )
-        # The cloud is optional: local entities work even if it is down.
-        await cloud.async_refresh()
-        if not cloud.last_update_success:
-            _LOGGER.warning("Hargassner cloud not reachable, cloud entities follow once it is")
+        await local.async_config_entry_first_refresh()
 
-    entry.runtime_data = HargassnerHKData(fmt=fmt, local=local, cloud=cloud)
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        cloud: CloudCoordinator | None = None
+        if entry.data.get(CONF_USE_CLOUD):
+            api = HargassnerCloud(async_get_clientsession(hass), entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
+            cloud = CloudCoordinator(
+                hass,
+                entry,
+                api,
+                str(entry.data[CONF_INSTALLATION_ID]),
+                int(entry.options.get(CONF_CLOUD_INTERVAL, DEFAULT_CLOUD_INTERVAL)),
+            )
+            # The cloud is optional: local entities work even if it is down.
+            await cloud.async_refresh()
+            if not cloud.last_update_success:
+                _LOGGER.warning("Hargassner cloud not reachable, cloud entities follow once it is")
+
+        entry.runtime_data = HargassnerHKData(fmt=fmt, local=local, cloud=cloud, options=dict(entry.options))
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except BaseException:
+        await client.stop()
+        raise
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
 
 async def _async_options_updated(hass: HomeAssistant, entry: HargassnerHKConfigEntry) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)
+    # Reconfigure/reauth already reload via async_update_reload_and_abort; only react to options.
+    if dict(entry.options) != entry.runtime_data.options:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry) -> bool:

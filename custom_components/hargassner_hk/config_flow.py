@@ -102,7 +102,8 @@ async def _validate_local(user_input: dict[str, Any]) -> tuple[str, dict[str, st
 
     try:
         line = await read_pm_line(user_input[CONF_HOST], user_input[CONF_PORT])
-    except (OSError, TimeoutError, ConnectionError) as err:
+    except (OSError, TimeoutError, ConnectionError, ValueError) as err:
+        # ValueError: garbage without newline beyond the stream reader limit
         _LOGGER.debug("Cannot read pm line: %s", err)
         return xml, {"base": "cannot_connect"}, {}
 
@@ -161,7 +162,8 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"received": "?", "expected": "?", "error_detail": ""}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_HOST].strip().lower())
+            user_input[CONF_HOST] = user_input[CONF_HOST].strip()
+            await self.async_set_unique_id(user_input[CONF_HOST].lower())
             self._abort_if_unique_id_configured()
             xml, errors, extra = await _validate_local(user_input)
             placeholders.update(extra)
@@ -253,13 +255,18 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         placeholders: dict[str, str] = {"received": "?", "expected": "?", "error_detail": ""}
         if user_input is not None:
+            user_input[CONF_HOST] = user_input[CONF_HOST].strip()
+            new_id = user_input[CONF_HOST].lower()
+            if any(e.unique_id == new_id and e.entry_id != entry.entry_id for e in self._async_current_entries()):
+                return self.async_abort(reason="already_configured")
             xml, errors, extra = await _validate_local(user_input)
             placeholders.update(extra)
             if not errors:
                 return self.async_update_reload_and_abort(
                     entry,
+                    unique_id=new_id,
                     data_updates={
-                        CONF_HOST: user_input[CONF_HOST].strip(),
+                        CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_DAQ_XML: xml,
                     },
