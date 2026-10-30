@@ -216,6 +216,24 @@
       },
       "frames_received": {
         "name": "Frames received"
+      },
+      "feed_rate": {
+        "name": "Feed rate"
+      },
+      "combustion_chamber_temperature": {
+        "name": "Combustion chamber temperature"
+      },
+      "water_pressure": {
+        "name": "Water pressure"
+      },
+      "storage_level_boiler": {
+        "name": "Storage level (boiler)"
+      },
+      "room_temperature": {
+        "name": "Room temperature circuit {number}"
+      },
+      "room_temperature_target": {
+        "name": "Room target temperature circuit {number}"
       }
     },
     "binary_sensor": {
@@ -248,6 +266,42 @@
       },
       "cloud_connection": {
         "name": "Cloud connection"
+      },
+      "emergency_stop": {
+        "name": "Emergency stop"
+      },
+      "feed_screw": {
+        "name": "Feed screw"
+      },
+      "room_discharge": {
+        "name": "Room discharge"
+      },
+      "ash_discharge": {
+        "name": "Ash discharge"
+      },
+      "feed_grate": {
+        "name": "Feed grate"
+      },
+      "ash_grate": {
+        "name": "Ash grate"
+      },
+      "cleaning_motor": {
+        "name": "Cleaning motor"
+      },
+      "ash_level": {
+        "name": "Ash level sensor"
+      },
+      "ash_box_switch": {
+        "name": "Ash box switch"
+      },
+      "storage_switch": {
+        "name": "Storage room switch"
+      },
+      "lid": {
+        "name": "Lid"
+      },
+      "circulation_pump": {
+        "name": "Circulation pump {number}"
       }
     },
     "number": {

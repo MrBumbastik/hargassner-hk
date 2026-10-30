@@ -12,7 +12,9 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 
 ## P1: vor dem ersten Test am echten Kessel
 
-- [ ] **DAQ-Datei auswerten** (Eco-HK 50, V30.0HAR.f): Kanalnamen in `channels.py` zuordnen, Hackgut-Kanäle identifizieren (Austragung, Schieberost, Asche, Unterdruck …), anonymisiertes Test-Fixture mit echter Kanalstruktur bauen.
+- [x] **DAQ-Datei auswerten** (Eco-HK 50, V30.0HAR.f): 133 Analogkanäle und 8 Digitalworte (32 Bit) → 141 Werte pro Zeile. Kanalnamen in `channels.py` zugeordnet, Test-Fixture `tests/fixtures/eco_hk_50_v30.0HAR.f.xml` (nur `<DAQPRJ>`-Block).
+- [ ] **`Lagerstand HK` [m³] der Steuerung nutzen:** Kanal 132, neu seit V30.0HAR.f. Prüfen, ob die Steuerung den Lagerstand selbst führt (Wert am Display vergleichen). Wenn ja, als Quelle für Lagerstand und Reichweite verwenden und das eigene Modell nur noch für Wärme und Verbrauch nutzen.
+- [ ] **Bedeutung unsicherer Kanäle klären:** GBF (Glutbett, Einheit °), PLK/TLK (Luftklappen?), ER/AR Run (Einschub-/Ascherost?), Effizienz. Abgleich mit dem Display bzw. der PARAMLOG des Kessels.
 - [ ] **Cloud-Schreibzugriff absichern:** Option „Werte über die Cloud ändern erlauben“, standardmäßig **aus**. Solange die Integration ungetestet ist, soll sie nicht versehentlich Sollwerte oder das Kesselprogramm ändern.
 - [ ] **Nur eine Telnet-Verbindung:** Prüfen, ob der Touch-Tronic parallele Verbindungen erlaubt. Falls nicht, im Reconfigure-Flow den laufenden Client wiederverwenden, statt eine zweite Verbindung zu öffnen.
 - [ ] **Hintergrund-Task sauber anbinden:** `entry.async_create_background_task` statt `asyncio.create_task` verwenden, damit HA den Task beim Herunterfahren zuverlässig beendet.

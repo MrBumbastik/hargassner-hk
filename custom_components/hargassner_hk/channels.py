@@ -3,7 +3,7 @@
 Channels are matched by the slug of their template name (see daq.slugify).
 Channels not listed here still become entities: they are named after the
 template name and get device class / unit from the template unit. Unknown
-channels without a temperature unit are disabled by default to keep the
+channels are disabled by default to keep the
 entity list manageable (a template has 100+ analog values and bits).
 
 The names come from the Touch-Tronic DAQ templates (Nano-PK, HV, Eco-HK
@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolume,
 )
 
 
@@ -62,9 +63,28 @@ ANALOG: dict[str, SensorMeta] = {
     "o2soll": SensorMeta("oxygen_target", "mdi:molecule"),
     "leistung": SensorMeta("output", "mdi:fire"),
     "szist": SensorMeta("draft_fan", "mdi:fan"),
+    "sz": SensorMeta("draft_fan", "mdi:fan"),  # Eco-HK
     "szsoll": SensorMeta("draft_fan_target", "mdi:fan", enabled=False),
     "essoll": SensorMeta("feed_target", "mdi:screw-machine-flat-top"),
+    "foerder": SensorMeta("feed_rate", "mdi:screw-machine-flat-top"),  # Eco-HK
+    "foerdermenge_ist": SensorMeta(None, "mdi:screw-machine-flat-top", enabled=False),
     "unterdruck": SensorMeta("negative_pressure", "mdi:gauge-low"),
+    "ud": SensorMeta("negative_pressure", "mdi:gauge-low"),  # Eco-HK
+    "ud_rel": SensorMeta(None, "mdi:gauge-low", enabled=False),
+    "ud_no_filt": SensorMeta(None, "mdi:gauge-low", enabled=False),
+    "brt": SensorMeta("combustion_chamber_temperature", "mdi:fire"),
+    "gbf": SensorMeta(None, "mdi:fire"),  # ember bed sensor
+    "plk": SensorMeta(None, "mdi:valve"),  # air flaps
+    "tlk": SensorMeta(None, "mdi:valve"),
+    "wasserdruck": SensorMeta("water_pressure", "mdi:gauge"),
+    "lagerstand_hk": SensorMeta("storage_level_boiler", "mdi:warehouse"),
+    "max_anf_kessel": SensorMeta(None, "mdi:thermometer-chevron-up"),
+    "atue": SensorMeta(None, "mdi:thermometer-alert"),  # temperature monitoring discharge
+    "etue": SensorMeta(None, "mdi:thermometer-alert"),  # temperature monitoring feed channel
+    "effizienz": SensorMeta(None, "mdi:percent"),
+    # Bulk counters / internals of the Eco-HK, mostly for diagnostics
+    "programm": SensorMeta(None, enabled=False),
+    "puffzustand": SensorMeta(None, enabled=False),
     "trl": SensorMeta("return_temperature"),
     "trlsoll": SensorMeta("return_temperature_target", enabled=False),
     # Motor currents: useful to spot a blocked discharge screw early
@@ -84,8 +104,13 @@ ANALOG: dict[str, SensorMeta] = {
     "tpmu": SensorMeta("buffer_lower_middle"),
     "tpu": SensorMeta("buffer_bottom"),
     "puff_fuellgrad": SensorMeta("buffer_charge", "mdi:water-percent"),
+    "pufferfuellgrad": SensorMeta("buffer_charge", "mdi:water-percent"),  # Eco-HK
     "puffer_fuellgrad": SensorMeta("buffer_charge", "mdi:water-percent"),
 }
+
+# Numbered channels (circuits, DHW tanks): only the first two are enabled by default.
+# The template lists every circuit the controller supports, not only the installed ones.
+PRIMARY_NUMBERS = {"1", "2"}
 
 # Numbered channels: heating circuits 1..n, DHW tanks 1..n
 ANALOG_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
@@ -93,6 +118,8 @@ ANALOG_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
     (re.compile(r"^tvl_?(\d+|[a-z])$"), "flow_temperature", None),
     (re.compile(r"^tb_?(\d+)$"), "dhw_temperature", "mdi:water-boiler"),
     (re.compile(r"^tbs_?(\d+)$"), "dhw_temperature_target", "mdi:water-boiler"),
+    (re.compile(r"^tra_?(\d+)$"), "room_temperature", "mdi:home-thermometer"),
+    (re.compile(r"^trs_?(\d+)$"), "room_temperature_target", "mdi:home-thermometer"),
 ]
 
 
@@ -102,8 +129,9 @@ def analog_meta(key: str, unit: str | None) -> SensorMeta:
         return ANALOG[key]
     for pattern, translation_key, icon in ANALOG_PATTERNS:
         if match := pattern.match(key):
-            return SensorMeta(translation_key, icon, placeholders={"number": match.group(1).upper()})
-    return SensorMeta(enabled=unit == "°C")
+            number = match.group(1).upper()
+            return SensorMeta(translation_key, icon, enabled=number in PRIMARY_NUMBERS, placeholders={"number": number})
+    return SensorMeta(enabled=False)
 
 
 # Template unit -> (device class, HA unit, state class)
@@ -115,6 +143,8 @@ _UNITS: dict[str, tuple[SensorDeviceClass | None, str, SensorStateClass]] = {
     "v": (SensorDeviceClass.VOLTAGE, UnitOfElectricPotential.VOLT, SensorStateClass.MEASUREMENT),
     "pa": (SensorDeviceClass.PRESSURE, UnitOfPressure.PA, SensorStateClass.MEASUREMENT),
     "mbar": (SensorDeviceClass.PRESSURE, UnitOfPressure.MBAR, SensorStateClass.MEASUREMENT),
+    "bar": (SensorDeviceClass.PRESSURE, UnitOfPressure.BAR, SensorStateClass.MEASUREMENT),
+    "m3": (SensorDeviceClass.VOLUME_STORAGE, UnitOfVolume.CUBIC_METERS, SensorStateClass.MEASUREMENT),
     "w": (SensorDeviceClass.POWER, UnitOfPower.WATT, SensorStateClass.MEASUREMENT),
     "kw": (SensorDeviceClass.POWER, UnitOfPower.KILO_WATT, SensorStateClass.MEASUREMENT),
     "kg": (SensorDeviceClass.WEIGHT, UnitOfMass.KILOGRAMS, SensorStateClass.MEASUREMENT),
@@ -147,14 +177,29 @@ DIGITAL: dict[str, BinaryMeta] = {
     "stoerung": BinaryMeta("fault", BinarySensorDeviceClass.PROBLEM),
     "stb": BinaryMeta("safety_limiter", BinarySensorDeviceClass.PROBLEM),
     "tks": BinaryMeta("boiler_contact", BinarySensorDeviceClass.RUNNING, enabled=False),
-    "hkpa": BinaryMeta("circuit_pump", placeholders={"number": "A"}, icon="mdi:pump"),
+    "hkpa": BinaryMeta("circuit_pump", placeholders={"number": "A"}, icon="mdi:pump", enabled=False),
     "blp": BinaryMeta("dhw_pump", placeholders={"number": "1"}, icon="mdi:pump"),
     "rlp": BinaryMeta("return_pump", icon="mdi:pump"),
+    "rlp_puffp": BinaryMeta("return_pump", icon="mdi:pump"),  # Eco-HK
+    "notaus": BinaryMeta("emergency_stop", BinarySensorDeviceClass.PROBLEM),
+    # Wood chip drives (Eco-HK)
+    "es_run": BinaryMeta("feed_screw", icon="mdi:screw-machine-flat-top"),
+    "ra_run": BinaryMeta("room_discharge", icon="mdi:screw-machine-flat-top"),
+    "aa_run": BinaryMeta("ash_discharge", icon="mdi:delete-variant"),
+    "er_run": BinaryMeta("feed_grate", icon="mdi:grid"),
+    "ar_run": BinaryMeta("ash_grate", icon="mdi:grid"),
+    "putzm_run": BinaryMeta("cleaning_motor", icon="mdi:broom"),
+    "fs_asche": BinaryMeta("ash_level", BinarySensorDeviceClass.PROBLEM),
+    "sk_aschebox": BinaryMeta("ash_box_switch", BinarySensorDeviceClass.OPENING, enabled=False),
+    "sk_lager": BinaryMeta("storage_switch", BinarySensorDeviceClass.OPENING, enabled=False),
+    "deckel": BinaryMeta("lid", BinarySensorDeviceClass.OPENING, enabled=False),
 }
 
 DIGITAL_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
     (re.compile(r"^hkp_?(\d+)$"), "circuit_pump", "mdi:pump"),
     (re.compile(r"^blp_?(\d+)$"), "dhw_pump", "mdi:pump"),
+    (re.compile(r"^bp_?(\d+)$"), "dhw_pump", "mdi:pump"),  # Eco-HK
+    (re.compile(r"^bzp_?(\d+)$"), "circulation_pump", "mdi:pump"),
 ]
 
 
@@ -164,7 +209,8 @@ def digital_meta(key: str) -> BinaryMeta:
         return DIGITAL[key]
     for pattern, translation_key, icon in DIGITAL_PATTERNS:
         if match := pattern.match(key):
-            return BinaryMeta(translation_key, icon=icon, placeholders={"number": match.group(1)})
+            number = match.group(1)
+            return BinaryMeta(translation_key, icon=icon, enabled=number in PRIMARY_NUMBERS, placeholders={"number": number})
     return BinaryMeta(device_class=None, enabled=False)
 
 

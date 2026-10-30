@@ -216,6 +216,24 @@
       },
       "frames_received": {
         "name": "Empfangene Datensätze"
+      },
+      "feed_rate": {
+        "name": "Fördermenge"
+      },
+      "combustion_chamber_temperature": {
+        "name": "Brennraumtemperatur"
+      },
+      "water_pressure": {
+        "name": "Wasserdruck"
+      },
+      "storage_level_boiler": {
+        "name": "Lagerstand (Kessel)"
+      },
+      "room_temperature": {
+        "name": "Raumtemperatur Heizkreis {number}"
+      },
+      "room_temperature_target": {
+        "name": "Raum-Solltemperatur Heizkreis {number}"
       }
     },
     "binary_sensor": {
@@ -248,6 +266,42 @@
       },
       "cloud_connection": {
         "name": "Cloud-Verbindung"
+      },
+      "emergency_stop": {
+        "name": "Not-Aus"
+      },
+      "feed_screw": {
+        "name": "Einschubschnecke"
+      },
+      "room_discharge": {
+        "name": "Raumaustragung"
+      },
+      "ash_discharge": {
+        "name": "Ascheaustragung"
+      },
+      "feed_grate": {
+        "name": "Einschubrost"
+      },
+      "ash_grate": {
+        "name": "Ascherost"
+      },
+      "cleaning_motor": {
+        "name": "Putzmotor"
+      },
+      "ash_level": {
+        "name": "Füllstand Asche"
+      },
+      "ash_box_switch": {
+        "name": "Schalter Aschebox"
+      },
+      "storage_switch": {
+        "name": "Schalter Lagerraum"
+      },
+      "lid": {
+        "name": "Deckel"
+      },
+      "circulation_pump": {
+        "name": "Zirkulationspumpe {number}"
       }
     },
     "number": {
