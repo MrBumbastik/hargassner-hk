@@ -183,3 +183,62 @@ def decode_frame(fmt: DaqFormat, line: str, received: datetime) -> Frame | None:
     digital = {ch.key: bool(words[ch.word] & (1 << ch.bit)) for ch in fmt.digital}
 
     return Frame(analog=analog, digital=digital, received=received, raw=line.strip())
+
+
+# --- stream quirks -------------------------------------------------------------
+#
+# On some firmwares the telnet stream carries analog values the DAQ template
+# does not list. Each quirk names the template channels after which one unknown
+# value is inserted (a name may repeat for several values).
+#
+# Eco-HK 50, V30.0HAR.f: verified against the cloud values. One extra value
+# before heating circuit A (exact spot within the ExtHK block uncertain), two
+# extra values after BoiZustand_1.
+@dataclass(frozen=True)
+class StreamQuirk:
+    """Unlisted stream values of a template family, matched by structure, not length alone."""
+
+    after: tuple[str, ...]
+    analog_counts: tuple[int, ...]  # template sizes the quirk was verified for
+    anchors: tuple[tuple[int, str], ...]  # (template index, channel name) that must match
+
+
+STREAM_QUIRKS: tuple[StreamQuirk, ...] = (
+    StreamQuirk(
+        after=("ExtHK_1 Solltmp.", "BoiZustand_1", "BoiZustand_1"),
+        analog_counts=(132, 133),  # without / with the boiler's own storage calculation
+        anchors=((79, "ExtHK_1 Solltmp."), (112, "BoiZustand_1"), (110, "TB1"), (87, "TVL_1")),
+    ),
+)
+
+
+def with_stream_extras(fmt: DaqFormat, after: tuple[str, ...] | list[str]) -> DaqFormat:
+    """Shift analog indices for unknown values inserted after the named channels."""
+    if not after:
+        return fmt
+    positions = []
+    for name in after:
+        ch = fmt.analog_by_name(name)
+        if ch is None:
+            raise DaqFormatError(f"Stream correction refers to unknown channel {name!r}")
+        positions.append(ch.index)
+    analog = tuple(
+        AnalogChannel(ch.index + sum(1 for p in positions if p < ch.index), ch.name, ch.key, ch.unit)
+        for ch in fmt.analog
+    )
+    return DaqFormat(analog, fmt.digital, fmt.analog_count + len(positions), fmt.digital_count)
+
+
+def fit_to_stream(fmt: DaqFormat, length: int) -> tuple[str, ...] | None:
+    """Stream correction needed for a pm line with `length` values; () if none, None if no fit."""
+    if length == fmt.expected_length:
+        return ()
+    names = {ch.index: ch.name for ch in fmt.analog}
+    for quirk in STREAM_QUIRKS:
+        if (
+            length == fmt.expected_length + len(quirk.after)
+            and fmt.analog_count in quirk.analog_counts
+            and all(names.get(index) == name for index, name in quirk.anchors)
+        ):
+            return quirk.after
+    return None

@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -23,6 +23,7 @@ from .const import (
     CONF_CALORIFIC_VALUE,
     CONF_CLOUD_INTERVAL,
     CONF_DAQ_XML,
+    CONF_STREAM_EXTRAS,
     CONF_EFFICIENCY,
     CONF_INSTALLATION_ID,
     CONF_NOMINAL_POWER,
@@ -42,7 +43,7 @@ from .const import (
     SERVICE_SET_STORAGE,
 )
 from .coordinator import CloudCoordinator, LocalCoordinator, fuel_store
-from .daq import DaqFormat, DaqFormatError, parse_daq_xml
+from .daq import DaqFormat, DaqFormatError, fit_to_stream, parse_daq_xml, with_stream_extras
 from .fuel import FuelSettings, FuelTracker
 from .telnet import HargassnerTelnet
 
@@ -123,9 +124,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry) -> bool:
     """Set up a boiler from a config entry."""
     try:
-        fmt = parse_daq_xml(entry.data[CONF_DAQ_XML])
+        base_fmt = parse_daq_xml(entry.data[CONF_DAQ_XML])
+        fmt = with_stream_extras(base_fmt, entry.data.get(CONF_STREAM_EXTRAS, []))
     except DaqFormatError as err:
-        raise ConfigEntryNotReady(f"Invalid DAQ template: {err}") from err
+        # Stored data is inconsistent: retrying cannot help, the user has to reconfigure.
+        raise ConfigEntryError(f"Invalid DAQ template or stream correction: {err}") from err
 
     power_name = entry.options.get(CONF_POWER_CHANNEL, DEFAULT_POWER_CHANNEL)
     power_channel = fmt.analog_by_name(power_name) if power_name else None
@@ -139,6 +142,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry)
     client.start()
     if not await client.wait_for_frame(FIRST_FRAME_TIMEOUT):
         await client.stop()
+        if client.frames_rejected and client.last_rejected_length is not None:
+            # Stream layout changed (e.g. firmware update): adopt a known correction and retry.
+            extras = fit_to_stream(base_fmt, client.last_rejected_length)
+            if extras is not None and list(extras) != list(entry.data.get(CONF_STREAM_EXTRAS, [])):
+                _LOGGER.info("Stream layout changed, applying known correction %s", extras)
+                hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_STREAM_EXTRAS: list(extras)})
         if client.frames_rejected:
             reason = (
                 f"pm line has {client.last_rejected_length} values, "

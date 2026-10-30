@@ -50,6 +50,8 @@ class BinaryMeta:
     icon: str | None = None
     enabled: bool = True
     placeholders: dict[str, str] | None = None
+    # Normally closed safety contacts: bit set = contact closed = OK
+    inverted: bool = False
 
 
 # --- analog -----------------------------------------------------------------
@@ -79,7 +81,7 @@ ANALOG: dict[str, SensorMeta] = {
     "wasserdruck": SensorMeta("water_pressure", "mdi:gauge"),
     "lagerstand_hk": SensorMeta("storage_level_boiler", "mdi:warehouse"),
     "max_anf_kessel": SensorMeta(None, "mdi:thermometer-chevron-up"),
-    "atue": SensorMeta(None, "mdi:thermometer-alert"),  # temperature monitoring discharge
+    "atue": SensorMeta(None, "mdi:thermometer-alert"),
     "etue": SensorMeta(None, "mdi:thermometer-alert"),  # temperature monitoring feed channel
     "effizienz": SensorMeta(None, "mdi:percent"),
     # Bulk counters / internals of the Eco-HK, mostly for diagnostics
@@ -123,10 +125,26 @@ ANALOG_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
 ]
 
 
-def analog_meta(key: str, unit: str | None) -> SensorMeta:
+# Wood chip (HK) templates: verified on an Eco-HK 50, these sensors are not fitted and
+# read placeholders (BRT 1000 °C cold, water pressure 0.00 bar, ATÜ -20 °C).
+WOOD_CHIP_DISABLED = {"brt", "wasserdruck", "atue"}
+# Normally closed contacts on wood chip boilers: bit set = closed = OK.
+WOOD_CHIP_INVERTED = {"stb", "notaus"}
+WOOD_CHIP_MARKERS = {"ra_run", "er_run", "ar_run"}
+
+
+def is_wood_chip(digital_keys: set[str]) -> bool:
+    """Wood chip templates have room discharge and grate drives."""
+    return WOOD_CHIP_MARKERS <= digital_keys
+
+
+def analog_meta(key: str, unit: str | None, wood_chip: bool = False) -> SensorMeta:
     """Return presentation metadata for an analog channel."""
     if key in ANALOG:
-        return ANALOG[key]
+        meta = ANALOG[key]
+        if wood_chip and key in WOOD_CHIP_DISABLED:
+            return SensorMeta(meta.translation_key, meta.icon, enabled=False, placeholders=meta.placeholders)
+        return meta
     for pattern, translation_key, icon in ANALOG_PATTERNS:
         if match := pattern.match(key):
             number = match.group(1).upper()
@@ -190,8 +208,9 @@ DIGITAL: dict[str, BinaryMeta] = {
     "ar_run": BinaryMeta("ash_grate", icon="mdi:grid"),
     "putzm_run": BinaryMeta("cleaning_motor", icon="mdi:broom"),
     "fs_asche": BinaryMeta("ash_level", BinarySensorDeviceClass.PROBLEM),
-    "sk_aschebox": BinaryMeta("ash_box_switch", BinarySensorDeviceClass.OPENING, enabled=False),
-    "sk_lager": BinaryMeta("storage_switch", BinarySensorDeviceClass.OPENING, enabled=False),
+    # Safety switches (SK_*) are closed (bit set) in normal operation
+    "sk_aschebox": BinaryMeta("ash_box_switch", BinarySensorDeviceClass.OPENING, enabled=False, inverted=True),
+    "sk_lager": BinaryMeta("storage_switch", BinarySensorDeviceClass.OPENING, enabled=False, inverted=True),
     "deckel": BinaryMeta("lid", BinarySensorDeviceClass.OPENING, enabled=False),
 }
 
@@ -203,10 +222,16 @@ DIGITAL_PATTERNS: list[tuple[re.Pattern[str], str, str | None]] = [
 ]
 
 
-def digital_meta(key: str) -> BinaryMeta:
+def digital_meta(key: str, wood_chip: bool = False) -> BinaryMeta:
     """Return presentation metadata for a digital channel."""
     if key in DIGITAL:
-        return DIGITAL[key]
+        meta = DIGITAL[key]
+        if wood_chip and key in WOOD_CHIP_INVERTED:
+            return BinaryMeta(meta.translation_key, meta.device_class, meta.icon, meta.enabled, meta.placeholders, inverted=True)
+        return meta
+    if key.startswith("sk_"):
+        # Safety switches (SK_*) are closed (bit set) in normal operation
+        return BinaryMeta(device_class=BinarySensorDeviceClass.OPENING, enabled=False, inverted=True)
     for pattern, translation_key, icon in DIGITAL_PATTERNS:
         if match := pattern.match(key):
             number = match.group(1)

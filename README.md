@@ -130,6 +130,9 @@ Geprüft an einem Eco-HK 50 mit Firmware V30.0HAR.f:
 
 ## Bekannte Grenzen / bitte melden
 
+- **Erster Live-Test bestanden (Eco-HK 50, V30.0HAR.f):** Der Datenstrom wird gelesen, die Werte stimmen mit der Cloud überein. Der Strom enthält bei dieser Firmware **3 Werte mehr**, als das DAQ-Template beschreibt. Die Integration erkennt das und korrigiert es automatisch. Bei anderen Modellen oder Firmwares kann eine ähnliche Abweichung auftreten. Dann meldet die Einrichtung „Template passt nicht“. Bitte als Issue melden, mit der Wertanzahl aus der Fehlermeldung.
+- Auf Hackgutkesseln sind `Stb`, `NotAus` und die Sicherheitsschalter `SK_*` Ruhestromkontakte: Bit gesetzt heißt „alles in Ordnung“. Die Integration invertiert sie.
+
 - Die Zustands- und Störungscodes stammen aus der Pellet-Firmware (Nano-PK) derselben Steuerungsfamilie. **Für den Eco-HK sind sie nicht verifiziert.** Unbekannte Zustände erscheinen als „Sonstiger Zustand“ und unbekannte Störungen als „Störung &lt;Nr&gt;“, jeweils mit dem Code als Attribut. Bitte melde fehlende Codes.
 - Die Kanalnamen im Eco-HK-Template können von den hier hinterlegten abweichen. Solche Kanäle erscheinen trotzdem, nur mit ihrem Template-Namen. Für die Ergänzung in `channels.py` helfen die **Diagnosedaten** (Gerät → ⋮ → Diagnose herunterladen); E-Mail und Passwort sind darin geschwärzt.
 - Der Touch-Tronic erlaubt eventuell nur **eine** Telnet-Verbindung gleichzeitig. Andere Tools, die Port 23 nutzen, solange parallel nicht verwenden.

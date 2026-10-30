@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HargassnerHKConfigEntry
-from .channels import BOILER_STATES, BURNING_STATES, digital_meta
+from .channels import BOILER_STATES, BURNING_STATES, digital_meta, is_wood_chip
 from .const import CHANNEL_ERROR, CHANNEL_STATE
 from .coordinator import CloudCoordinator, CloudData, LocalCoordinator
 from .daq import DigitalChannel
@@ -23,7 +23,8 @@ async def async_setup_entry(
 ) -> None:
     data = entry.runtime_data
     local = data.local
-    entities: list[BinarySensorEntity] = [DigitalSensor(local, ch) for ch in data.fmt.digital]
+    wood_chip = is_wood_chip({ch.key for ch in data.fmt.digital})
+    entities: list[BinarySensorEntity] = [DigitalSensor(local, ch, wood_chip) for ch in data.fmt.digital]
     entities.append(ConnectionSensor(local))
     if state := data.fmt.analog_by_name(CHANNEL_STATE):
         entities.append(BurningSensor(local, state.key))
@@ -41,10 +42,11 @@ async def async_setup_entry(
 class DigitalSensor(LocalEntity, BinarySensorEntity):
     """One bit of the pm line."""
 
-    def __init__(self, coordinator: LocalCoordinator, channel: DigitalChannel) -> None:
+    def __init__(self, coordinator: LocalCoordinator, channel: DigitalChannel, wood_chip: bool = False) -> None:
         super().__init__(coordinator, f"d_{channel.key}")
         self._key = channel.key
-        meta = digital_meta(channel.key)
+        meta = digital_meta(channel.key, wood_chip)
+        self._inverted = meta.inverted
         self._attr_device_class = meta.device_class
         self._attr_entity_registry_enabled_default = meta.enabled
         if meta.icon:
@@ -58,7 +60,10 @@ class DigitalSensor(LocalEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        return self.coordinator.data.digital.get(self._key)
+        value = self.coordinator.data.digital.get(self._key)
+        if value is None:
+            return None
+        return not value if self._inverted else value
 
 
 class ConnectionSensor(LocalEntity, BinarySensorEntity):

@@ -24,6 +24,7 @@ from .channels import (
     BOILER_STATES,
     analog_meta,
     error_text,
+    is_wood_chip,
     unit_meta,
     unit_scale,
 )
@@ -44,8 +45,9 @@ async def async_setup_entry(
 ) -> None:
     data = entry.runtime_data
     local = data.local
+    wood_chip = is_wood_chip({ch.key for ch in data.fmt.digital})
     entities: list[SensorEntity] = [
-        AnalogSensor(local, ch) for ch in data.fmt.analog if ch.key not in SPECIAL_CHANNELS
+        AnalogSensor(local, ch, wood_chip) for ch in data.fmt.analog if ch.key not in SPECIAL_CHANNELS
     ]
 
     if state := data.fmt.analog_by_name(CHANNEL_STATE):
@@ -63,11 +65,11 @@ async def async_setup_entry(
 class AnalogSensor(LocalEntity, SensorEntity):
     """One analog value of the pm line."""
 
-    def __init__(self, coordinator: LocalCoordinator, channel: AnalogChannel) -> None:
+    def __init__(self, coordinator: LocalCoordinator, channel: AnalogChannel, wood_chip: bool = False) -> None:
         super().__init__(coordinator, f"a_{channel.key}")
         self._key = channel.key
         self._scale = unit_scale(channel.unit)
-        meta = analog_meta(channel.key, channel.unit)
+        meta = analog_meta(channel.key, channel.unit, wood_chip)
         device_class, unit, state_class = unit_meta(channel.unit)
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = unit

@@ -35,6 +35,7 @@ from .const import (
     CONF_CALORIFIC_VALUE,
     CONF_CLOUD_INTERVAL,
     CONF_DAQ_XML,
+    CONF_STREAM_EXTRAS,
     CONF_EFFICIENCY,
     CONF_INSTALLATION_ID,
     CONF_INSTALLATION_NAME,
@@ -54,7 +55,15 @@ from .const import (
     DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
 )
-from .daq import DaqFormatError, decode_frame, extract_daq_xml, parse_daq_xml, split_pm_line
+from .daq import (
+    DaqFormatError,
+    decode_frame,
+    extract_daq_xml,
+    fit_to_stream,
+    parse_daq_xml,
+    split_pm_line,
+    with_stream_extras,
+)
 from .telnet import read_pm_line
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,32 +99,37 @@ def _cloud_schema(defaults: Mapping[str, Any]) -> vol.Schema:
     )
 
 
-async def _validate_local(user_input: dict[str, Any]) -> tuple[str, dict[str, str], dict[str, str]]:
+async def _validate_local(
+    user_input: dict[str, Any],
+) -> tuple[str, list[str], dict[str, str], dict[str, str]]:
     """Parse the template and check it against a live pm line.
 
-    Returns (cleaned xml, errors, description placeholders).
+    Returns (cleaned xml, stream correction, errors, description placeholders).
     """
     try:
         xml = extract_daq_xml(user_input[CONF_DAQ_XML])
         fmt = parse_daq_xml(xml)
     except DaqFormatError as err:
         _LOGGER.debug("Invalid DAQ template: %s", err)
-        return "", {CONF_DAQ_XML: "invalid_daq"}, {"error_detail": str(err)}
+        return "", [], {CONF_DAQ_XML: "invalid_daq"}, {"error_detail": str(err)}
 
     try:
         line = await read_pm_line(user_input[CONF_HOST], user_input[CONF_PORT])
     except (OSError, TimeoutError, ConnectionError, ValueError) as err:
         # ValueError: garbage without newline beyond the stream reader limit
         _LOGGER.debug("Cannot read pm line: %s", err)
-        return xml, {"base": "cannot_connect"}, {}
+        return xml, [], {"base": "cannot_connect"}, {}
 
     received = len(split_pm_line(line) or [])
-    if decode_frame(fmt, line, dt_util.utcnow()) is None:
-        return xml, {CONF_DAQ_XML: "template_mismatch"}, {
+    extras = fit_to_stream(fmt, received)
+    if extras is None or decode_frame(with_stream_extras(fmt, extras), line, dt_util.utcnow()) is None:
+        return xml, [], {CONF_DAQ_XML: "template_mismatch"}, {
             "received": str(received),
             "expected": str(fmt.expected_length),
         }
-    return xml, {}, {}
+    if extras:
+        _LOGGER.info("Stream has %s values more than the template, applying known correction", len(extras))
+    return xml, list(extras), {}, {}
 
 
 def model_info(installation: dict[str, Any]) -> tuple[str | None, float | None]:
@@ -167,7 +181,7 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = user_input[CONF_HOST].strip()
             await self.async_set_unique_id(user_input[CONF_HOST].lower())
             self._abort_if_unique_id_configured()
-            xml, errors, extra = await _validate_local(user_input)
+            xml, stream_extras, errors, extra = await _validate_local(user_input)
             placeholders.update(extra)
             if not errors:
                 self._title = user_input[CONF_NAME]
@@ -175,6 +189,7 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: user_input[CONF_HOST].strip(),
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_DAQ_XML: xml,
+                    CONF_STREAM_EXTRAS: stream_extras,
                     CONF_MODEL: DEFAULT_MODEL,
                 }
                 return await self.async_step_cloud()
@@ -261,7 +276,7 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
             new_id = user_input[CONF_HOST].lower()
             if any(e.unique_id == new_id and e.entry_id != entry.entry_id for e in self._async_current_entries()):
                 return self.async_abort(reason="already_configured")
-            xml, errors, extra = await _validate_local(user_input)
+            xml, stream_extras, errors, extra = await _validate_local(user_input)
             placeholders.update(extra)
             if not errors:
                 return self.async_update_reload_and_abort(
@@ -271,6 +286,7 @@ class HargassnerHKConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_DAQ_XML: xml,
+                        CONF_STREAM_EXTRAS: stream_extras,
                     },
                 )
         return self.async_show_form(

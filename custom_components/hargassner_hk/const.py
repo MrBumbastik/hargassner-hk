@@ -26,6 +26,7 @@ APP_BRANDING = "BRANDING_HARGASSNER"
 
 # Config entry data
 CONF_DAQ_XML = "daq_xml"
+CONF_STREAM_EXTRAS = "stream_extras"  # template channels followed by unlisted stream values
 CONF_MODEL = "model"
 CONF_USE_CLOUD = "use_cloud"
 CONF_INSTALLATION_ID = "installation_id"
