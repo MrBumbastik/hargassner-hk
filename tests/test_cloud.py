@@ -92,10 +92,12 @@ def cloud_api():
         yield set_value, post_action
 
 
-async def _setup(hass: HomeAssistant, boiler: FakeBoiler) -> MockConfigEntry:
+async def _setup(hass: HomeAssistant, boiler: FakeBoiler, allow_write: bool | None = True) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Eco-HK",
+        # None: option missing entirely, i.e. the default of an existing install
+        options={} if allow_write is None else {"allow_cloud_write": allow_write},
         data={
             CONF_HOST: boiler.host,
             CONF_PORT: boiler.port,
@@ -196,3 +198,58 @@ async def test_config_flow_with_cloud_sets_model_and_power(hass: HomeAssistant, 
     assert result["data"][CONF_INSTALLATION_ID] == "7"
     assert result["result"].options[CONF_NOMINAL_POWER] == 50.0
     await hass.async_block_till_done()
+
+
+async def test_cloud_write_is_blocked_by_default(hass: HomeAssistant, fake_boiler: FakeBoiler, cloud_api) -> None:
+    """Without the option nothing may be sent to the boiler: numbers, selects, climate, buttons."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    set_value, post_action = cloud_api
+    entry = await _setup(hass, fake_boiler, allow_write=None)
+    calls = [
+        ("select", "select_option", {"entity_id": _cloud_entity(hass, entry, "select", "heater", "program"), "option": "program_off"}),
+        ("number", "set_value", {"entity_id": _cloud_entity(hass, entry, "number", "boiler_1", "boiler_temperature_target"), "value": 60}),
+        ("climate", "set_hvac_mode", {"entity_id": _cloud_entity(hass, entry, "climate", "heating_circuit_floor_2", "climate"), "hvac_mode": "off"}),
+        ("climate", "set_temperature", {"entity_id": _cloud_entity(hass, entry, "climate", "heating_circuit_floor_2", "climate"), "temperature": 22}),
+        ("button", "press", {"entity_id": _cloud_entity(hass, entry, "button", "buffer", "action_force_charging")}),
+    ]
+    for domain, service, data in calls:
+        with pytest.raises(ServiceValidationError) as err:
+            await hass.services.async_call(domain, service, data, blocking=True)
+        assert err.value.translation_key == "cloud_write_disabled", (domain, service)
+    set_value.assert_not_awaited()
+    post_action.assert_not_awaited()
+    # Values are still readable
+    assert hass.states.get(_cloud_entity(hass, entry, "select", "heater", "program")).state == "program_automatic"
+
+
+async def test_options_flow_offers_write_switch(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DAQ_XML: DAQ_XML, CONF_USE_CLOUD: True})
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    fields = {str(key): key for key in result["data_schema"].schema}
+    assert fields["allow_cloud_write"].default() is False
+    user_input = {str(k): (k.default() if callable(getattr(k, "default", None)) else None) for k in result["data_schema"].schema}
+    user_input["allow_cloud_write"] = True
+    result = await hass.config_entries.options.async_configure(result["flow_id"], user_input)
+    assert entry.options["allow_cloud_write"] is True
+
+
+async def test_options_flow_hides_write_switch_without_cloud(hass: HomeAssistant) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DAQ_XML: DAQ_XML, CONF_USE_CLOUD: False})
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert "allow_cloud_write" not in {str(key) for key in result["data_schema"].schema}
+
+
+async def test_toggling_write_switch_does_not_reload(hass: HomeAssistant, fake_boiler: FakeBoiler, cloud_api) -> None:
+    """The switch is read live: enabling it allows writes immediately, without dropping the telnet stream."""
+    set_value, _ = cloud_api
+    entry = await _setup(hass, fake_boiler, allow_write=None)
+    client = entry.runtime_data.local.client
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "allow_cloud_write": True})
+    await hass.async_block_till_done()
+    assert entry.runtime_data.local.client is client  # no reload
+    program = _cloud_entity(hass, entry, "select", "heater", "program")
+    await hass.services.async_call("select", "select_option", {"entity_id": program, "option": "program_off"}, blocking=True)
+    set_value.assert_awaited_with(f"{BASE}/heater/parameters/program", "PROGRAM_OFF")

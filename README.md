@@ -10,7 +10,7 @@
 > - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft.
 > - **Ungetestet:** Die Integration lief noch an **keinem echten Kessel**. Es gibt automatische Tests, aber die laufen nur gegen einen simulierten Kessel und nachgebaute Cloud-Daten.
 > - Die Eco-HK-spezifischen Teile, also Kanalnamen sowie Zustands- und Störungscodes, sind **Annahmen**. Sie stammen von der Pellet-Steuerung derselben Gerätefamilie.
-> - Die Cloud-Funktionen **schreiben Werte in deinen Kessel**, zum Beispiel Sollwerte, Betriebsarten und das Kesselprogramm. Nutze sie nur, wenn du weißt, was du tust. Die Verantwortung liegt bei dir.
+> - Die Cloud-Funktionen können **Werte in deinen Kessel schreiben**, zum Beispiel Sollwerte, Betriebsarten und das Kesselprogramm. Das ist **standardmäßig gesperrt** und muss in den Optionen ausdrücklich erlaubt werden („Werte über die Cloud ändern erlauben“). Schalte es erst ein, wenn du die Integration an deinem Kessel geprüft hast. Die Verantwortung liegt bei dir.
 >
 > Ausprobieren, Fehlerberichte und Diagnosedaten von echten Anlagen sind sehr willkommen. Für den produktiven Einsatz ist der Stand noch **nicht** gedacht.
 
@@ -66,6 +66,7 @@ Danach: Einstellungen → Geräte & Dienste → Integration hinzufügen → **Ha
 | Heizwert | 3,4 kWh/kg | Fichte W30. Faustwerte: W20 ≈ 4,0, W40 ≈ 2,8 |
 | Schüttdichte | 210 kg/SRM | Fichte W30 ≈ 200–230, Buche ≈ 300–340 |
 | Wirkungsgrad | 90 % | |
+| Werte über die Cloud ändern erlauben | aus | Schreibschutz für alle Cloud-Steuerungen (nur mit Cloud-Login sichtbar) |
 
 ### So wird der Verbrauch berechnet
 

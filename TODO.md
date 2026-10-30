@@ -15,7 +15,7 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 - [x] **DAQ-Datei auswerten** (Eco-HK 50, V30.0HAR.f): 133 Analogkanäle und 8 Digitalworte (32 Bit) → 141 Werte pro Zeile. Kanalnamen in `channels.py` zugeordnet, Test-Fixture `tests/fixtures/eco_hk_50_v30.0HAR.f.xml` (nur `<DAQPRJ>`-Block).
 - [ ] **`Lagerstand HK` [m³] der Steuerung nutzen:** Kanal 132. Erscheint **nicht durch das Firmware-Update**: DAQ02787 (V30.0HAR.f, 30.10. 0:00) hat ihn noch nicht, DAQ02788 (30.10. ab 7:46, gleiche Firmware) schon. Ursache bestätigt: Der Kanal existiert nur, solange am Kessel die **Lagerbestandsberechnung** aktiv ist. Der Nutzer hat sie testweise aktiviert (Meldung „Lager leer“) und wieder deaktiviert. Beide Varianten liegen als Fixture vor (140 bzw. 141 Werte). Solange die Funktion aus ist, bleibt das eigene Verbrauchsmodell die Quelle für den Lagerstand. Prüfen, ob die Steuerung den Lagerstand selbst führt (Wert am Display vergleichen). Wenn ja, als Quelle für Lagerstand und Reichweite verwenden und das eigene Modell nur noch für Wärme und Verbrauch nutzen.
 - [ ] **Bedeutung unsicherer Kanäle klären:** GBF (Glutbett, Einheit °), PLK/TLK (Luftklappen?), ER/AR Run (Einschub-/Ascherost?), Effizienz. Abgleich mit dem Display bzw. der PARAMLOG des Kessels.
-- [ ] **Cloud-Schreibzugriff absichern:** Option „Werte über die Cloud ändern erlauben“, standardmäßig **aus**. Solange die Integration ungetestet ist, soll sie nicht versehentlich Sollwerte oder das Kesselprogramm ändern.
+- [x] **Cloud-Schreibzugriff absichern (30.10.):** Option „Werte über die Cloud ändern erlauben“, standardmäßig **aus**. Solange die Integration ungetestet ist, soll sie nicht versehentlich Sollwerte oder das Kesselprogramm ändern.
 - [ ] **Nur eine Telnet-Verbindung:** Prüfen, ob der Touch-Tronic parallele Verbindungen erlaubt. Falls nicht, im Reconfigure-Flow den laufenden Client wiederverwenden, statt eine zweite Verbindung zu öffnen.
 - [ ] **Hintergrund-Task sauber anbinden:** `entry.async_create_background_task` statt `asyncio.create_task` verwenden, damit HA den Task beim Herunterfahren zuverlässig beendet.
 - [x] **Code-Review** (`/code-review high`, 30.10.): 10 Befunde
@@ -34,7 +34,8 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 ## P3: Qualität und Veröffentlichung
 
 - [ ] **Tests ergänzen:** Cloud-Client (Login, Token-Refresh, 401-Wiederholung), Reauth-, Reconfigure- und Options-Flow, Diagnose, Climate. Ziel: über 90 % Abdeckung, kein Modul unter 80 %.
-- [ ] **CI mit GitHub Actions:** `hassfest`, HACS-Validierung (`hacs/action`), `pytest`, `ruff`. Das läuft bei jedem Push.
+- [x] **CI mit GitHub Actions (30.10.):** `hassfest`, HACS-Validierung (`hacs/action`) und `pytest` bei jedem Push auf `main` und bei Pull Requests. Lokal zusätzlich ein Pre-Commit-Hook (Tests und Prüfung auf persönliche Daten).
+- [ ] **Linting:** `ruff` mit Konfiguration einführen und in die CI aufnehmen.
 - [ ] **Lizenz festlegen** (z. B. MIT oder Apache-2.0).
 - [ ] **Releases:** Versionsnummer in `manifest.json`, Git-Tag und GitHub-Release mit Changelog. HACS zeigt Releases als Updates an.
 - [ ] **Brand-Icon:** Logo für die Integrationsliste in HA und HACS (Pull Request an `home-assistant/brands`, Markenrechte von Hargassner beachten).

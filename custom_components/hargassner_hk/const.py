@@ -33,6 +33,7 @@ CONF_INSTALLATION_NAME = "installation_name"
 
 # Options
 CONF_UPDATE_INTERVAL = "update_interval"
+CONF_ALLOW_CLOUD_WRITE = "allow_cloud_write"
 CONF_CLOUD_INTERVAL = "cloud_interval"
 CONF_POWER_CHANNEL = "power_channel"
 CONF_NOMINAL_POWER = "nominal_power"
@@ -41,6 +42,7 @@ CONF_BULK_DENSITY = "bulk_density"
 CONF_EFFICIENCY = "efficiency"
 
 DEFAULT_UPDATE_INTERVAL = 10
+DEFAULT_ALLOW_CLOUD_WRITE = False  # safety: writing to the boiler is opt-in
 DEFAULT_CLOUD_INTERVAL = 120
 DEFAULT_POWER_CHANNEL = "Leistung"
 DEFAULT_NOMINAL_POWER = 30.0  # kW

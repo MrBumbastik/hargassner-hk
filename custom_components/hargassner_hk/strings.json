@@ -71,12 +71,14 @@
           "nominal_power": "Nominal boiler power",
           "calorific_value": "Calorific value of the wood chips",
           "bulk_density": "Bulk density",
-          "efficiency": "Boiler efficiency"
+          "efficiency": "Boiler efficiency",
+          "allow_cloud_write": "Allow changing values via the cloud"
         },
         "data_description": {
           "power_channel": "Usually 'Leistung'. Choose '-' to disable heat and fuel figures.",
           "calorific_value": "Spruce W20 ≈ 4.0, W30 ≈ 3.4, W40 ≈ 2.8 kWh/kg",
-          "bulk_density": "Spruce W30 ≈ 200–230, beech W30 ≈ 300–340 kg/SRM"
+          "bulk_density": "Spruce W30 ≈ 200–230, beech W30 ≈ 300–340 kg/SRM",
+          "allow_cloud_write": "Off: setpoints, programs and buttons are read-only. Turn on only once you have checked the integration against your boiler."
         }
       }
     }
@@ -378,6 +380,9 @@
   "exceptions": {
     "entry_not_loaded": {
       "message": "This Hargassner HK entry is not loaded."
+    },
+    "cloud_write_disabled": {
+      "message": "Changing values via the Hargassner cloud is disabled. Enable \"Allow changing values via the cloud\" in the integration options."
     }
   },
   "services": {

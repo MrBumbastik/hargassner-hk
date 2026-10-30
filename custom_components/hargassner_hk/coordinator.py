@@ -8,13 +8,13 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .cloud import CloudAuthError, CloudError, HargassnerCloud
-from .const import DOMAIN, FRAME_STALE_AFTER
+from .const import CONF_ALLOW_CLOUD_WRITE, DEFAULT_ALLOW_CLOUD_WRITE, DOMAIN, FRAME_STALE_AFTER
 from .daq import Frame
 from .fuel import FuelTracker
 from .telnet import HargassnerTelnet
@@ -126,6 +126,16 @@ class CloudCoordinator(DataUpdateCoordinator[CloudData]):
         self.api = api
         self.installation_id = installation_id
 
+    @property
+    def allow_write(self) -> bool:
+        """Read live from the options, so toggling needs no reload and can't go stale."""
+        return bool(self.config_entry.options.get(CONF_ALLOW_CLOUD_WRITE, DEFAULT_ALLOW_CLOUD_WRITE))
+
+    def _check_write_allowed(self) -> None:
+        # Every write to the boiler goes through here (numbers, selects, climate, buttons).
+        if not self.allow_write:
+            raise ServiceValidationError(translation_domain=DOMAIN, translation_key="cloud_write_disabled")
+
     async def _async_update_data(self) -> CloudData:
         try:
             await self.api.ensure_token()
@@ -164,6 +174,7 @@ class CloudCoordinator(DataUpdateCoordinator[CloudData]):
         return CloudData(widgets=result, online=bool(meta.get("online_state", True)))
 
     async def async_set_value(self, resource: str, value: Any) -> None:
+        self._check_write_allowed()
         try:
             await self.api.set_value(resource, value)
         except CloudError as err:
@@ -171,6 +182,7 @@ class CloudCoordinator(DataUpdateCoordinator[CloudData]):
         await self.async_request_refresh()
 
     async def async_post_action(self, resource: str) -> None:
+        self._check_write_allowed()
         try:
             await self.api.post_action(resource)
         except CloudError as err:

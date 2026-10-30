@@ -29,6 +29,8 @@ from homeassistant.util import dt as dt_util
 
 from .cloud import CloudAuthError, CloudError, HargassnerCloud
 from .const import (
+    CONF_ALLOW_CLOUD_WRITE,
+    DEFAULT_ALLOW_CLOUD_WRITE,
     CONF_BULK_DENSITY,
     CONF_CALORIFIC_VALUE,
     CONF_CLOUD_INTERVAL,
@@ -337,6 +339,9 @@ class HargassnerHKOptionsFlow(OptionsFlow):
             schema[
                 vol.Required(CONF_CLOUD_INTERVAL, default=opts.get(CONF_CLOUD_INTERVAL, DEFAULT_CLOUD_INTERVAL))
             ] = _number(30, 3600, 10, "s")
+            schema[
+                vol.Required(CONF_ALLOW_CLOUD_WRITE, default=opts.get(CONF_ALLOW_CLOUD_WRITE, DEFAULT_ALLOW_CLOUD_WRITE))
+            ] = BooleanSelector()
         schema.update(
             {
                 vol.Required(CONF_POWER_CHANNEL, default=default_power): SelectSelector(

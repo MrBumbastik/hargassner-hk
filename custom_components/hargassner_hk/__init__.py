@@ -18,6 +18,7 @@ from .cloud import HargassnerCloud
 from .const import (
     ATTR_AMOUNT,
     ATTR_CONFIG_ENTRY_ID,
+    CONF_ALLOW_CLOUD_WRITE,
     CONF_BULK_DENSITY,
     CONF_CALORIFIC_VALUE,
     CONF_CLOUD_INTERVAL,
@@ -187,8 +188,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry)
 
 async def _async_options_updated(hass: HomeAssistant, entry: HargassnerHKConfigEntry) -> None:
     # Reconfigure/reauth already reload via async_update_reload_and_abort; only react to options.
-    if dict(entry.options) != entry.runtime_data.options:
+    # The cloud write switch is read live by the coordinator and needs no reload.
+    def relevant(options: dict) -> dict:
+        return {k: v for k, v in options.items() if k != CONF_ALLOW_CLOUD_WRITE}
+
+    if relevant(dict(entry.options)) != relevant(entry.runtime_data.options):
         await hass.config_entries.async_reload(entry.entry_id)
+    else:
+        entry.runtime_data.options = dict(entry.options)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry) -> bool:

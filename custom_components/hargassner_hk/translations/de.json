@@ -71,12 +71,14 @@
           "nominal_power": "Nennleistung des Kessels",
           "calorific_value": "Heizwert der Hackschnitzel",
           "bulk_density": "Schüttdichte",
-          "efficiency": "Kesselwirkungsgrad"
+          "efficiency": "Kesselwirkungsgrad",
+          "allow_cloud_write": "Werte über die Cloud ändern erlauben"
         },
         "data_description": {
           "power_channel": "Meist 'Leistung'. '-' deaktiviert Wärme- und Verbrauchswerte.",
           "calorific_value": "Fichte W20 ≈ 4,0, W30 ≈ 3,4, W40 ≈ 2,8 kWh/kg",
-          "bulk_density": "Fichte W30 ≈ 200–230, Buche W30 ≈ 300–340 kg/SRM"
+          "bulk_density": "Fichte W30 ≈ 200–230, Buche W30 ≈ 300–340 kg/SRM",
+          "allow_cloud_write": "Aus: Sollwerte, Programme und Buttons sind schreibgeschützt. Erst einschalten, wenn du die Integration an deinem Kessel geprüft hast."
         }
       }
     }
@@ -378,6 +380,9 @@
   "exceptions": {
     "entry_not_loaded": {
       "message": "Dieser Hargassner-HK-Eintrag ist nicht geladen."
+    },
+    "cloud_write_disabled": {
+      "message": "Das Ändern von Werten über die Hargassner-Cloud ist deaktiviert. Aktiviere „Werte über die Cloud ändern erlauben“ in den Optionen der Integration."
     }
   },
   "services": {
