@@ -44,7 +44,7 @@ Beide Integrationen laufen parallel, da sie verschiedene Domains haben.
    1. Am Touch-Tronic die SD-Aufzeichnung aktivieren.
    2. Eine SD-Karte für ein paar Minuten einstecken.
    3. Die Datei `DAQ00000.DAQ` am PC in einem Texteditor öffnen.
-   4. Den Block `<DAQPRJ> … </DAQPRJ>` am Dateianfang kopieren. Du kannst auch einfach den ganzen Dateiinhalt einfügen, der Block wird automatisch herausgeschnitten.
+   4. Den Block `<DAQPRJ> … </DAQPRJ>` am Dateianfang kopieren (ausführlich: [Kurzanleitung DAQ-Datei](docs/DAQ-Datei.md)). Du kannst auch einfach den ganzen Dateiinhalt einfügen, der Block wird automatisch herausgeschnitten.
 
 Bei der Einrichtung liest die Integration eine Live-Zeile vom Kessel und prüft, ob das Template dazu passt.
 
