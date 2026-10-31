@@ -1,6 +1,7 @@
 """Operating hours: counting per frame, gaps, persistence, boiler counter alignment."""
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -119,7 +120,12 @@ async def test_runtime_sensors_and_service(hass: HomeAssistant, fake_boiler: Fak
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     runtime = entry.runtime_data.local.runtime
-    assert runtime.seconds["circuit_pump_1"] > 0  # frames arrive every 50 ms in the fake
+    # Frames arrive every 50 ms in the fake; a slow CI runner may need a moment for the second one
+    for _ in range(40):
+        if runtime.seconds["circuit_pump_1"] > 0:
+            break
+        await asyncio.sleep(0.05)
+    assert runtime.seconds["circuit_pump_1"] > 0
     assert runtime.seconds["feed_screw"] == 0
 
     reg = er.async_get(hass)
