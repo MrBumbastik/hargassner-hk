@@ -1,21 +1,16 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="custom_components/hargassner_hk/brand/dark_logo.png">
-    <img src="custom_components/hargassner_hk/brand/logo.png" alt="HK Hackgut" height="128">
-  </picture>
-</p>
+![HK Hackgut](https://raw.githubusercontent.com/MrBumbastik/hargassner-hk/main/custom_components/hargassner_hk/brand/icon.png)
 
 # Hargassner HK – Home Assistant Integration für Hackgutkessel
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 ![Status](https://img.shields.io/badge/Status-Beta-yellow.svg)
-![Version](https://img.shields.io/badge/Version-0.10.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-0.10.1-blue.svg)
 ![Vibecoded](https://img.shields.io/badge/vibecoded-KI--generiert-blueviolet.svg)
 
 > [!WARNING]
-> **Beta (v0.10.0): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
+> **Beta (v0.10.1): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
 >
-> - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft. Es gibt rund 85 automatische Tests und eine CI (Tests, hassfest, HACS-Prüfung).
+> - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft. Es gibt rund 100 automatische Tests und eine CI (Tests, hassfest, HACS-Prüfung).
 > - **Getestet an einem Eco-HK 50, Firmware V30.0HAR.f:** Lokaler Datenstrom und Cloud laufen dort produktiv und haben die bisherigen Hargassner-Integrationen samt Dashboard und Energie-Dashboard ersetzt. Die Messwerte wurden mit der Hargassner-Cloud abgeglichen. Ein Schreibtest über die Cloud (Warmwasser-Solltemperatur ändern und zurücksetzen) war erfolgreich.
 > - **Andere Modelle und Firmwares sind ungetestet.** Kanalzuordnung, Zustands- und Störungscodes können dort abweichen.
 > - **Zustands- und Störungscodes des Eco-HK** stammen aus dem Service-Handbuch Eco-HK 20-60 von Hargassner; Start und Leistungsbrand sind zusätzlich am Display bestätigt. Eine echte Störung ist an der Testanlage noch nicht aufgetreten.
@@ -60,7 +55,7 @@ Beide Integrationen laufen parallel, da sie verschiedene Domains haben.
 2. **DAQ-Template: meist nicht nötig.** Die Bedeutung der Werte im Datenstrom hängt von Modell und Firmware ab. Für geprüfte Kessel bringt die Integration das Template mit und erkennt es automatisch, das Feld bleibt dann einfach leer. Mitgeliefert ist derzeit:
    - **Eco-HK, Firmware V30.0HAR.f** (mit und ohne Lagerbestandsberechnung des Kessels)
 
-   Wird dein Kessel nicht erkannt, meldet die Einrichtung das, und du exportierst das Template selbst: **Einstellen → Setup → Dateimanager → DAQ**, neueste Datei, **Export** (ausführlich: [Kurzanleitung DAQ-Datei](docs/DAQ-Datei.md)). Bitte schick es dann auch als Issue, damit es für alle mitgeliefert werden kann.
+   Wird dein Kessel nicht erkannt, meldet die Einrichtung das, und du exportierst das Template selbst: **Einstellen → Setup → Dateimanager → DAQ**, neueste Datei, **Export** (ausführlich: [Kurzanleitung DAQ-Datei](https://github.com/MrBumbastik/hargassner-hk/blob/main/docs/DAQ-Datei.md)). Bitte schick es dann auch als Issue, damit es für alle mitgeliefert werden kann.
 
 Bei der Einrichtung liest die Integration eine Live-Zeile vom Kessel und prüft, ob das Template dazu passt.
 
@@ -169,7 +164,7 @@ Die Beta läuft seit Oktober 2026 an einem Eco-HK 50. Version 1.0 gibt es, wenn 
 - [ ] **Betriebsstunden mit dem Display abgleichen:** gezählte Laufzeiten gegen die Zähler am Touch-Tronic prüfen, nach einigen Tagen Brennbetrieb.
 - [ ] **Ein bis zwei Wochen Dauerbetrieb:** Verbindungsabbrüche, Neustarts von HA und Kessel, Cloud-Token-Erneuerung, Hackgut-Bilanz über mehrere Tage.
 
-Weitere geplante Verbesserungen stehen in der [Roadmap](TODO.md).
+Weitere geplante Verbesserungen stehen in der [Roadmap](https://github.com/MrBumbastik/hargassner-hk/blob/main/TODO.md).
 
 ## Mithelfen
 
@@ -178,9 +173,9 @@ Am meisten helfen Rückmeldungen von echten Anlagen. Bitte ein [Issue](https://g
 - den **Diagnosedaten** (Gerät → ⋮ → Diagnose herunterladen). E-Mail und Passwort sind darin geschwärzt. Prüfe sie trotzdem vor dem Hochladen auf persönliche Angaben,
 - gern dem `<DAQPRJ>`-Block deiner DAQ-Datei.
 
-Auf der [Roadmap](TODO.md) steht, was als Nächstes geplant ist.
+Auf der [Roadmap](https://github.com/MrBumbastik/hargassner-hk/blob/main/TODO.md) steht, was als Nächstes geplant ist.
 
-Das Logo (Flamme über Hackschnitzeln) ist eigens für dieses Projekt entworfen und kein Hargassner-Markenzeichen. Die Quellen liegen in [`docs/logo/`](docs/logo/).
+Das Logo (Flamme über Hackschnitzeln) ist eigens für dieses Projekt entworfen und kein Hargassner-Markenzeichen. Die Quellen liegen in [`docs/logo/`](https://github.com/MrBumbastik/hargassner-hk/tree/main/docs/logo).
 
 ## Entwicklung
 
@@ -197,4 +192,4 @@ Das Telnet-Protokoll und das DAQ-Template-Format sind dokumentiert in [TheRealKi
 
 ## Lizenz
 
-[Apache-2.0](LICENSE). Der Code ist ohne jede Gewährleistung, siehe Lizenztext.
+[Apache-2.0](https://github.com/MrBumbastik/hargassner-hk/blob/main/LICENSE). Der Code ist ohne jede Gewährleistung, siehe Lizenztext.
