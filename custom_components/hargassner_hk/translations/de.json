@@ -204,7 +204,10 @@
           "cleaning": "Putzen",
           "other": "Sonstiger Zustand",
           "burnout": "Abbrand",
-          "ignition_start": "Zündung Start"
+          "ignition_start": "Zündung Start",
+          "safety_limiter_tripped": "STB ausgelöst",
+          "manual_operation": "Handbetrieb",
+          "log_wood_emergency": "Stückholz-Notbetrieb"
         }
       },
       "fault_message": {

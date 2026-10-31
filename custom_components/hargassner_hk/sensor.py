@@ -53,7 +53,7 @@ async def async_setup_entry(
     if state := data.fmt.analog_by_name(CHANNEL_STATE):
         entities.append(BoilerStateSensor(local, state.key, wood_chip))
     if error := data.fmt.analog_by_name(CHANNEL_ERROR):
-        entities.append(ErrorSensor(local, error.key))
+        entities.append(ErrorSensor(local, error.key, wood_chip))
 
     if local.power_key:
         entities.extend(FuelSensor(local, desc) for desc in FUEL_SENSORS)
@@ -138,9 +138,10 @@ class ErrorSensor(LocalEntity, SensorEntity):
     _attr_translation_key = "fault_message"
     _attr_icon = "mdi:alert-circle-outline"
 
-    def __init__(self, coordinator: LocalCoordinator, key: str) -> None:
+    def __init__(self, coordinator: LocalCoordinator, key: str, wood_chip: bool = False) -> None:
         super().__init__(coordinator, "fault_message")
         self._key = key
+        self._wood_chip = wood_chip
 
     def _code(self) -> int | None:
         value = self.coordinator.data.analog.get(self._key)
@@ -151,7 +152,7 @@ class ErrorSensor(LocalEntity, SensorEntity):
         code = self._code()
         if code is None:
             return None
-        return error_text(code, self.hass.config.language)
+        return error_text(code, self.hass.config.language, self._wood_chip)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

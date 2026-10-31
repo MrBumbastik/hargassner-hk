@@ -244,7 +244,8 @@ def test_wood_chip_state_table() -> None:
     assert boiler_state(7, wood_chip=True) == "burnout"  # recorded 30.10.: feed off, O2 -> air, then off
     assert boiler_state(3, wood_chip=True) == "ignition_start"  # cold start 31.10.: display "Zündung Start"
     assert boiler_state(4, wood_chip=True) == "ignition"  # display "Brennk. füllen", then "Zündung"
-    assert boiler_state(9, wood_chip=True) == "other"  # display text not known yet
+    assert boiler_state(9, wood_chip=True) == "ash_removal"  # service manual: ENTASCHUNG
+    assert boiler_state(8, wood_chip=True) == "other"  # unused per service manual
     assert boiler_state(5, wood_chip=False) == "ignition"  # pellet table unchanged
 
 
@@ -253,7 +254,7 @@ async def test_wood_chip_state_entities(hass: HomeAssistant, fake_boiler: FakeBo
     """Unconfirmed code -> 'other' with raw code; burner active via the ignition heater bit."""
     fmt = parse_daq_xml(TEMPLATE)
     analog = ["0"] * fmt.analog_count
-    analog[fmt.analog_by_name("ZK").index] = "9"
+    analog[fmt.analog_by_name("ZK").index] = "8"
     words = [0] * fmt.digital_count
     zh = next(ch for ch in fmt.digital if ch.name == "Z Heiz.")
     words[zh.word] |= 1 << zh.bit
@@ -267,6 +268,6 @@ async def test_wood_chip_state_entities(hass: HomeAssistant, fake_boiler: FakeBo
     await hass.async_block_till_done()
     reg = er.async_get(hass)
     state = hass.states.get(reg.async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_boiler_state"))
-    assert state.state == "other" and state.attributes["code"] == 9
+    assert state.state == "other" and state.attributes["code"] == 8
     burning = hass.states.get(reg.async_get_entity_id("binary_sensor", DOMAIN, f"{entry.entry_id}_burning"))
     assert burning.state == "on"

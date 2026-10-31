@@ -31,6 +31,7 @@ from homeassistant.const import (
 )
 
 from .const import WOOD_CHIP_STATE_CODES
+from .errors_eco_hk import ERRORS_ECO_HK_DE
 
 
 @dataclass(frozen=True)
@@ -263,8 +264,8 @@ BOILER_STATE_OPTIONS = [*dict.fromkeys([*BOILER_STATES.values(), *WOOD_CHIP_STAT
 BURNING_STATES = {"ignition", "transition_full_firing", "full_firing"}
 
 # Wood chip boilers (Eco-HK) use other codes. Only codes backed by evidence are listed
-# (see const.WOOD_CHIP_STATE_CODES: 1/3/4/5 confirmed on the display, 7 derived from a
-# recording); everything else shows as "other" with the raw code, never a guessed name.
+# (see const.WOOD_CHIP_STATE_CODES: service manual table, 1/3/4/5 also confirmed on the
+# display); everything else shows as "other" with the raw code, never a guessed name.
 BOILER_STATES_WOOD_CHIP: dict[int, str] = dict(WOOD_CHIP_STATE_CODES)
 
 
@@ -275,6 +276,8 @@ def boiler_state(code: int, wood_chip: bool) -> str:
 
 
 # --- error codes (Störungs Nr) -------------------------------------------------
+
+# Pellet (Nano-PK) codes; wood chip boilers use errors_eco_hk.ERRORS_ECO_HK_DE instead.
 
 ERRORS_DE: dict[int, str] = {
     0: "Keine Störung",
@@ -312,9 +315,19 @@ ERRORS_EN: dict[int, str] = {
 }
 
 
-def error_text(code: int, language: str) -> str:
-    """Human-readable text for a Störungs Nr."""
-    table = ERRORS_DE if language.lower().startswith("de") else ERRORS_EN
-    if code in table:
+def error_text(code: int, language: str, wood_chip: bool = False) -> str:
+    """Human-readable text for a Störungs Nr.
+
+    Wood chip boilers (Eco-HK) use the message list from their service manual, which
+    differs from the pellet codes (e.g. 5 = feed connection screw overcurrent, not
+    "empty ash box"). Those texts exist in German only.
+    """
+    german = language.lower().startswith("de")
+    if code == 0:
+        return ERRORS_DE[0] if german else ERRORS_EN[0]
+    if wood_chip and code in ERRORS_ECO_HK_DE:
+        return ERRORS_ECO_HK_DE[code]
+    table = ERRORS_DE if german else ERRORS_EN
+    if not wood_chip and code in table:
         return table[code]
-    return f"Störung {code}" if table is ERRORS_DE else f"Fault {code}"
+    return f"Störung {code}" if german else f"Fault {code}"

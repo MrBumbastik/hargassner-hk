@@ -68,10 +68,17 @@ KEY_FEED = "foerder"  # fuel feed rate %
 #     4 "Zündung" (display first shows "Brennk. füllen" while the feed fills the chamber
 #       for ~2.5 min, then the ignition heater + blower run ~6 min),
 #     5 "Leistungsbrand" (output jumps to 100 %, firing bit F2 follows ~15 s later).
-#  9: seen before the start with the ash discharge running; display text not yet known.
 #  7: recorded 30.10.: feed stops, O2 rises to air (20 %), firing bit drops, then code 1
 #     -> burn-out of the remaining fuel. The boiler reports output 100 % meanwhile!
-WOOD_CHIP_STATE_CODES = {1: "off", 3: "ignition_start", 4: "ignition", 5: "full_firing", 7: "burnout"}
+# The Eco-HK 20-60 service manual (chapter 4.2, analog state output) lists the full table:
+#  1 AUS, 3 ZUENDPROBE (display: "Zündung Start"), 4 ZUENDUNG, 5 LEISTUNGSBRAND,
+#  6 GLUTERHALTUNG, 7 AUSBRAND, 9 ENTASCHUNG (seen 31.10. with the ash discharge running),
+#  10 STB, 11 HAND, 12 STUECKHOLZ_NOTBETRIEB; 2 and 8 are unused.
+WOOD_CHIP_STATE_CODES = {
+    1: "off", 3: "ignition_start", 4: "ignition", 5: "full_firing", 6: "ember_preservation",
+    7: "burnout", 9: "ash_removal", 10: "safety_limiter_tripped", 11: "manual_operation",
+    12: "log_wood_emergency",
+}
 WOOD_CHIP_FULL_FIRING = frozenset(code for code, key in WOOD_CHIP_STATE_CODES.items() if key == "full_firing")
 CHANNEL_ERROR = "Störungs Nr"
 

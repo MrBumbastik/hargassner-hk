@@ -7,9 +7,10 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 Die Integration hat am Eco-HK 50 des Autors die beiden bisherigen Integrationen abgelöst (Dashboards, Energie-Dashboard). Für 1.0 fehlt:
 
 - [x] **Kaltstart mitgeschnitten (31.10., v0.9.1):** Mitschnitt `~/hargassner-daq/kaltstart_2026-10-31.csv` mit Displayfotos abgeglichen (Displayuhr ca. 3 min vor). 9 → 3 „Zündung Start“ (~15 s, Saugzug spült, Förderung startet) → 4 „Zündung“ (zuerst „Brennk. füllen“: Einschub ~2,5 min; dann Zündheizung + Gebläse ~6 min) → 5 „Leistungsbrand“ (Leistung springt auf 100 %, F2-Bit ~15 s später). Vom Startsignal bis Leistungsbrand ~7,5 min.
-- [ ] **Code 9 klären:** tritt vor dem Start auf, Ascheaustragung läuft (Displaytext notieren).
+- [x] **Zustandstabelle aus dem Service-Handbuch (v0.10.0):** Kap. 4.2 „Betriebszustände“ (Analogausgang Klemme 78/79): 1 AUS, 3 ZUENDPROBE, 4 ZUENDUNG, 5 LEISTUNGSBRAND, 6 GLUTERHALTUNG, 7 AUSBRAND, 9 ENTASCHUNG, 10 STB, 11 HAND, 12 STUECKHOLZ_NOTBETRIEB. Damit sind Code 7 (Abbrand) und Code 9 (Entaschung) geklärt.
 - [ ] **Code 7 = Abbrand am Display bestätigen.**
-- [ ] **Störungscodes Eco-HK prüfen** (`ERRORS_*`, bei der nächsten Störung Code und Displaytext notieren).
+- [x] **Störungstexte Eco-HK (v0.10.0):** 418 Codes aus der Meldungsliste des Service-Handbuchs (`errors_eco_hk.py`, nur Nr. + Text). Handbuch und Auszug mit Ursache/Lösung liegen lokal in `~/hargassner-docs/` (nicht ins Repo, Urheberrecht).
+- [ ] Bei der ersten echten Störung Code und Displaytext abgleichen.
 - [ ] **Betriebsstunden gegen das Display prüfen:** Startwerte stammen aus der DAQ-Kopfzeile (30.10. früh) und sind vermutlich 1–2 h zu niedrig; nach einigen Tagen Zuwachs vergleichen.
 - [ ] **1–2 Wochen Dauerbetrieb ohne Auffälligkeiten:** Telnet-Reconnect, HA-/Kesselneustart, Token-Refresh, Hackgut-Bilanz.
 - [ ] Danach Release 1.0.0 und Hinweis „Beta“ im README entfernen.
@@ -52,7 +53,7 @@ Die Integration hat am Eco-HK 50 des Autors die beiden bisherigen Integrationen 
 - [x] **Erster Live-Lesetest (30.10.):** Strom erreichbar, 143 Werte statt 140 → Korrektur für 3 zusätzliche Werte (`STREAM_QUIRKS` in `daq.py`), gegen die Cloud verifiziert. Stb, NotAus und SK_* sind Ruhestromkontakte (invertiert). BRT, Wasserdruck und ATÜ liefern Platzhalter (bei Hackgut standardmäßig aus). Echte Zeile als Fixture `tests/fixtures/eco_hk_50_live_line.txt`.
 - [ ] **Unsichere Position des ersten Zusatzwerts** (ExtHK-Block, Index 78–80): betrifft nur externe Heizkreise. Klären, sobald jemand mit ExtHK meldet.
 
-- [ ] **Zustands- und Störungscodes verifizieren:** Rohcodes über einige Tage beobachten (Attribut `code`) und mit der Anzeige am Touch-Tronic abgleichen. `BOILER_STATES` und `ERRORS_*` für den HK korrigieren.
+- [x] **Zustands- und Störungscodes verifizieren:** für den Eco-HK aus dem Service-Handbuch übernommen (siehe oben).
 - [ ] **Raumtemperatur aus `measurements`:** Das Widget liefert `room_temperature_current = null`, die Messwerte enthalten sie aber. Climate soll den Messwert verwenden.
 - [ ] **Verbrauchsmodell kalibrieren:** Nach der nächsten Hackgut-Lieferung berechnete und tatsächliche Menge vergleichen, die Standardwerte für Heizwert und Schüttdichte prüfen.
 - [ ] **Cloud-Leistung als Ersatz:** Fällt der lokale Datenstrom aus, die Verbrauchsberechnung mit `heater.efficiency` (= Leistung %, 5-Minuten-Raster) weiterführen.

@@ -21,7 +21,9 @@ def frame(zk: float, leistung: float = 0, foerder: float = 0, **bits: bool) -> F
 
 @pytest.mark.parametrize(
     ("code", "state"),
-    [(1, "off"), (3, "ignition_start"), (4, "ignition"), (5, "full_firing"), (7, "burnout"), (9, "other")],
+    [(1, "off"), (3, "ignition_start"), (4, "ignition"), (5, "full_firing"), (6, "ember_preservation"),
+     (7, "burnout"), (9, "ash_removal"), (10, "safety_limiter_tripped"), (11, "manual_operation"),
+     (12, "log_wood_emergency"), (2, "other"), (8, "other")],
 )
 def test_wood_chip_state_codes(code: int, state: str) -> None:
     assert boiler_state(code, True) == state
@@ -45,3 +47,17 @@ def test_cold_start_sequence() -> None:
     # No heat is counted before full firing: output reads 0 % while filling
     assert effective_output(filling, "leistung", True) == 0
     assert effective_output(full_firing, "leistung", True) == 85
+
+
+def test_eco_hk_fault_texts() -> None:
+    """Wood chip boilers use the service manual list, pellet boilers keep their table."""
+    from custom_components.hargassner_hk.channels import error_text
+
+    assert error_text(5, "de", wood_chip=True) == "Überstrom Verbindungsschnecke"
+    assert error_text(5, "de", wood_chip=False) == "Aschelade entleeren"
+    assert error_text(309, "en", wood_chip=True) == "Aschebox voll!"  # German only
+    assert error_text(155, "de", wood_chip=True) == "Keine Verbindung zu HKR 0 - 15"  # range 150-165
+    assert error_text(0, "de", wood_chip=True) == "Keine Störung"
+    assert error_text(0, "en", wood_chip=True) == "No fault"
+    assert error_text(4, "de", wood_chip=True) == "Störung 4"  # not in the manual
+    assert error_text(4, "en", wood_chip=True) == "Fault 4"
