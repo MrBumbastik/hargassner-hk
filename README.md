@@ -4,11 +4,11 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 ![Status](https://img.shields.io/badge/Status-Beta-yellow.svg)
-![Version](https://img.shields.io/badge/Version-0.10.1-blue.svg)
+![Version](https://img.shields.io/badge/Version-0.10.2-blue.svg)
 ![Vibecoded](https://img.shields.io/badge/vibecoded-KI--generiert-blueviolet.svg)
 
 > [!WARNING]
-> **Beta (v0.10.1): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
+> **Beta (v0.10.2): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
 >
 > - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft. Es gibt rund 100 automatische Tests und eine CI (Tests, hassfest, HACS-Prüfung).
 > - **Getestet an einem Eco-HK 50, Firmware V30.0HAR.f:** Lokaler Datenstrom und Cloud laufen dort produktiv und haben die bisherigen Hargassner-Integrationen samt Dashboard und Energie-Dashboard ersetzt. Die Messwerte wurden mit der Hargassner-Cloud abgeglichen. Ein Schreibtest über die Cloud (Warmwasser-Solltemperatur ändern und zurücksetzen) war erfolgreich.

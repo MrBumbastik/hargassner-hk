@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable
 from typing import Any
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,6 +23,18 @@ def boiler_device(entry: HargassnerHKConfigEntry) -> DeviceInfo:
         manufacturer=MANUFACTURER,
         model=entry.data.get(CONF_MODEL, DEFAULT_MODEL),
     )
+
+
+def _via_boiler(hass: HomeAssistant, entry: HargassnerHKConfigEntry) -> dict[str, Any]:
+    """Link a heating circuit / buffer device to the boiler device.
+
+    HA 2026.x wants the registry id (`via_device_id`; `via_device` stops working in
+    2027.8), older versions only know the identifier tuple.
+    """
+    if "via_device_id" not in DeviceInfo.__annotations__:
+        return {"via_device": (DOMAIN, entry.entry_id)}
+    boiler = dr.async_get(hass).async_get_or_create(config_entry_id=entry.entry_id, **boiler_device(entry))
+    return {"via_device_id": boiler.id}
 
 
 class LocalEntity(CoordinatorEntity[LocalCoordinator]):
@@ -55,7 +68,7 @@ class CloudEntity(CoordinatorEntity[CloudCoordinator]):
                 name=widget["name"],
                 manufacturer=MANUFACTURER,
                 model=widget["type"].replace("_", " ").title(),
-                via_device=(DOMAIN, entry.entry_id),
+                **_via_boiler(coordinator.hass, entry),
             )
 
     @property
@@ -104,7 +117,7 @@ def add_cloud_entities(
 @callback
 def remove_cloud_entities(hass: Any, entry: HargassnerHKConfigEntry) -> None:
     """Delete cloud entities and heating circuit devices (cloud removed or other installation)."""
-    from homeassistant.helpers import device_registry as dr, entity_registry as er
+    from homeassistant.helpers import entity_registry as er
 
     ent_reg = er.async_get(hass)
     for ent in er.async_entries_for_config_entry(ent_reg, entry.entry_id):

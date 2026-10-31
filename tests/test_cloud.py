@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.hargassner_hk.const import CONF_DAQ_XML, CONF_INSTALLATION_ID, CONF_USE_CLOUD, DOMAIN
@@ -143,6 +143,20 @@ async def test_known_cloud_parameters(hass: HomeAssistant, fake_boiler: FakeBoil
 
     await hass.services.async_call("select", "select_option", {"entity_id": program, "option": "program_stop_firing"}, blocking=True)
     set_value.assert_awaited_with(f"{BASE}/heater/parameters/program", "PROGRAM_STOP_FIRING")
+
+
+async def test_circuit_devices_hang_off_the_boiler(
+    hass: HomeAssistant, fake_boiler: FakeBoiler, cloud_api, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Heating circuit / buffer devices point to the boiler by registry id (no deprecated via_device)."""
+    entry = await _setup(hass, fake_boiler)
+    dev_reg = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    (boiler,) = [d for d in devices if (DOMAIN, entry.entry_id) in d.identifiers]
+    children = [d for d in devices if d.id != boiler.id]
+    assert children
+    assert all(d.via_device_id == boiler.id for d in children)
+    assert "via_device" not in caplog.text
 
 
 async def test_action_buttons(hass: HomeAssistant, fake_boiler: FakeBoiler, cloud_api) -> None:
