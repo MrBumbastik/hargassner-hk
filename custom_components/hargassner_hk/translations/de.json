@@ -203,7 +203,8 @@
           "ash_removal": "Entaschung",
           "cleaning": "Putzen",
           "other": "Sonstiger Zustand",
-          "burnout": "Abbrand"
+          "burnout": "Abbrand",
+          "ignition_start": "Zündung Start"
         }
       },
       "fault_message": {

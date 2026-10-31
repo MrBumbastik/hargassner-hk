@@ -6,7 +6,8 @@ Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneli
 
 Die Integration hat am Eco-HK 50 des Autors die beiden bisherigen Integrationen abgelöst (Dashboards, Energie-Dashboard). Für 1.0 fehlt:
 
-- [ ] **Kaltstart mitschneiden:** Codes für Startvorbereitung, Zündung, Übergang Leistungsbrand (`zk` mit Displaytext). Danach `WOOD_CHIP_STATE_CODES` ergänzen.
+- [x] **Kaltstart mitgeschnitten (31.10., v0.9.1):** Mitschnitt `~/hargassner-daq/kaltstart_2026-10-31.csv` mit Displayfotos abgeglichen (Displayuhr ca. 3 min vor). 9 → 3 „Zündung Start“ (~15 s, Saugzug spült, Förderung startet) → 4 „Zündung“ (zuerst „Brennk. füllen“: Einschub ~2,5 min; dann Zündheizung + Gebläse ~6 min) → 5 „Leistungsbrand“ (Leistung springt auf 100 %, F2-Bit ~15 s später). Vom Startsignal bis Leistungsbrand ~7,5 min.
+- [ ] **Code 9 klären:** tritt vor dem Start auf, Ascheaustragung läuft (Displaytext notieren).
 - [ ] **Code 7 = Abbrand am Display bestätigen.**
 - [ ] **Störungscodes Eco-HK prüfen** (`ERRORS_*`, bei der nächsten Störung Code und Displaytext notieren).
 - [ ] **Betriebsstunden gegen das Display prüfen:** Startwerte stammen aus der DAQ-Kopfzeile (30.10. früh) und sind vermutlich 1–2 h zu niedrig; nach einigen Tagen Zuwachs vergleichen.

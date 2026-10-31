@@ -203,7 +203,8 @@
           "ash_removal": "Ash removal",
           "cleaning": "Cleaning",
           "other": "Other",
-          "burnout": "Burn-out"
+          "burnout": "Burn-out",
+          "ignition_start": "Ignition start"
         }
       },
       "fault_message": {

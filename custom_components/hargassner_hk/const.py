@@ -63,10 +63,15 @@ KEY_IGNITION_HEATER = "z_heiz"
 KEY_FIRING_ACTIVE = "feuerung_aktiv_f2"  # boiler's own "firing active" bit
 KEY_FEED = "foerder"  # fuel feed rate %
 # Codes seen on an Eco-HK 50 (V30.0HAR.f); others show as "other".
-#  5: confirmed on the display (output 81 %, O2 regulated to setpoint)
+#  3, 4, 5: cold start recorded 31.10. against display photos (display clock ~3 min ahead):
+#     3 "Zündung Start" (~15 s, draft fan purges, feed starts),
+#     4 "Zündung" (display first shows "Brennk. füllen" while the feed fills the chamber
+#       for ~2.5 min, then the ignition heater + blower run ~6 min),
+#     5 "Leistungsbrand" (output jumps to 100 %, firing bit F2 follows ~15 s later).
+#  9: seen before the start with the ash discharge running; display text not yet known.
 #  7: recorded 30.10.: feed stops, O2 rises to air (20 %), firing bit drops, then code 1
 #     -> burn-out of the remaining fuel. The boiler reports output 100 % meanwhile!
-WOOD_CHIP_STATE_CODES = {1: "off", 5: "full_firing", 7: "burnout"}
+WOOD_CHIP_STATE_CODES = {1: "off", 3: "ignition_start", 4: "ignition", 5: "full_firing", 7: "burnout"}
 WOOD_CHIP_FULL_FIRING = frozenset(code for code, key in WOOD_CHIP_STATE_CODES.items() if key == "full_firing")
 CHANNEL_ERROR = "Störungs Nr"
 

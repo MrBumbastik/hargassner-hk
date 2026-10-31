@@ -9,16 +9,16 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 ![Status](https://img.shields.io/badge/Status-Beta-yellow.svg)
-![Version](https://img.shields.io/badge/Version-0.9.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-0.9.1-blue.svg)
 ![Vibecoded](https://img.shields.io/badge/vibecoded-KI--generiert-blueviolet.svg)
 
 > [!WARNING]
-> **Beta (v0.9.0): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
+> **Beta (v0.9.1): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
 >
 > - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft. Es gibt rund 85 automatische Tests und eine CI (Tests, hassfest, HACS-Prüfung).
 > - **Getestet an einem Eco-HK 50, Firmware V30.0HAR.f:** Lokaler Datenstrom und Cloud laufen dort produktiv und haben die bisherigen Hargassner-Integrationen samt Dashboard und Energie-Dashboard ersetzt. Die Messwerte wurden mit der Hargassner-Cloud abgeglichen. Ein Schreibtest über die Cloud (Warmwasser-Solltemperatur ändern und zurücksetzen) war erfolgreich.
 > - **Andere Modelle und Firmwares sind ungetestet.** Kanalzuordnung, Zustands- und Störungscodes können dort abweichen.
-> - **Noch nicht verifiziert, auch am Eco-HK 50 nicht:** die Zustandscodes für Startvorbereitung und Zündung (bisher nur „Aus“, „Leistungsbrand“ und „Abbrand“ zugeordnet) sowie die Störungscodes. Die Störungscodes stammen von der Pellet-Steuerung derselben Gerätefamilie.
+> - **Noch nicht verifiziert, auch am Eco-HK 50 nicht:** „Abbrand“ (Code 7) am Display, Code 9 sowie die Störungscodes. Die Störungscodes stammen von der Pellet-Steuerung derselben Gerätefamilie.
 > - Die Cloud-Funktionen können **Werte in deinen Kessel schreiben**, zum Beispiel Sollwerte, Betriebsarten und das Kesselprogramm. Das ist **standardmäßig gesperrt** und muss in den Optionen ausdrücklich erlaubt werden („Werte über die Cloud ändern erlauben“). Die Verantwortung liegt bei dir.
 >
 > Was bis zur Version 1.0 noch fehlt, steht unter [Weg zu Version 1.0](#weg-zu-version-10). Rückmeldungen von weiteren Anlagen sind sehr willkommen, vor allem Diagnosedaten und Zustandscodes mit dem zugehörigen Displaytext.
@@ -127,7 +127,7 @@ actions:
 ## Entitäten
 
 - **Sensoren:** alle Analogkanäle des Templates. Bekannte Kanäle (TK, TRG, O2, SZist, Leistung, Puffer, Vorläufe …) haben deutsche Namen. Motorströme und unbekannte Kanäle ohne °C-Einheit sind standardmäßig deaktiviert, du kannst sie bei Bedarf aktivieren.
-- **Kesselzustand** mit dem Rohcode als Attribut. Beim Eco-HK: „Aus“ (1) und „Leistungsbrand“ (5) am Display bestätigt, „Abbrand“ (7) aus einem Mitschnitt abgeleitet (Förderung aus, Restsauerstoff steigt auf Luftwert, danach „Aus“). Andere Codes erscheinen als „Sonstiger Zustand“, bis sie zugeordnet sind (bitte melden: Code + Displaytext).
+- **Kesselzustand** mit dem Rohcode als Attribut. Beim Eco-HK am Display bestätigt: „Aus“ (1), „Zündung Start“ (3), „Zündung“ (4) und „Leistungsbrand“ (5). „Abbrand“ (7) ist aus einem Mitschnitt abgeleitet (Förderung aus, Restsauerstoff steigt auf Luftwert, danach „Aus“). Andere Codes erscheinen als „Sonstiger Zustand“, bis sie zugeordnet sind (bitte melden: Code + Displaytext).
 - **Brenner aktiv** (und Brenner-Betriebsstunden) folgt beim Hackgutkessel dem kesseleigenen Bit „Feuerung aktiv (F2)“, dazu Leistungsbrand oder Zündheizung.
 - **Betriebsstunden** je Komponente (Brenner, Zündung, Saugzug, Einschub, Austragungen, Roste, Putzmotor, Pumpen). Die Integration zählt sie selbst aus dem Datenstrom, denn der Kessel sendet dort nur den Zähler der Einschubschnecke mit. *Betriebsstunden …* zählen ab Installation und liefern Statistik pro Tag/Woche/Monat. *Zählerstand …* = Startwert + gezählte Stunden, zum Abgleich mit dem Kesseldisplay (Startwert einmalig per Aktion `hargassner_hk.set_operating_hours`).
 - **Störung** als Text mit Code, dazu der Binärsensor *Störung aktiv*.
@@ -163,7 +163,7 @@ Geprüft an einem Eco-HK 50 mit Firmware V30.0HAR.f:
 
 Die Beta läuft seit Oktober 2026 an einem Eco-HK 50. Version 1.0 gibt es, wenn diese Punkte erledigt sind:
 
-- [ ] **Kaltstart mitschneiden:** Die Zustandscodes für Startvorbereitung, Zündung und Übergang zum Leistungsbrand sind noch unbekannt. Bis dahin zeigt der Kesselzustand in dieser Phase „Sonstiger Zustand“ (Code als Attribut). *Brenner aktiv* stimmt trotzdem, weil es am Feuerungs-Bit hängt.
+- [x] **Kaltstart mitgeschnitten (31.10.2026):** Code 3 = „Zündung Start“, Code 4 = „Zündung“ (anfangs mit „Brennk. füllen“ am Display), Code 5 = „Leistungsbrand“, mit Displayfotos abgeglichen. Offen ist nur noch Code 9, der vor dem Start bei laufender Ascheaustragung auftritt.
 - [ ] **„Abbrand“ (Code 7) am Display bestätigen:** bisher nur aus einem Mitschnitt abgeleitet.
 - [ ] **Störungscodes prüfen:** Die Texte stammen von der Pellet-Steuerung. Unbekannte Störungen erscheinen als „Störung &lt;Nr&gt;“, werden also trotzdem gemeldet.
 - [ ] **Betriebsstunden mit dem Display abgleichen:** gezählte Laufzeiten gegen die Zähler am Touch-Tronic prüfen, nach einigen Tagen Brennbetrieb.

@@ -263,9 +263,8 @@ BOILER_STATE_OPTIONS = [*dict.fromkeys([*BOILER_STATES.values(), *WOOD_CHIP_STAT
 BURNING_STATES = {"ignition", "transition_full_firing", "full_firing"}
 
 # Wood chip boilers (Eco-HK) use other codes. Only codes backed by evidence are listed
-# (see const.WOOD_CHIP_STATE_CODES: 5 confirmed on the display, 7 derived from a
+# (see const.WOOD_CHIP_STATE_CODES: 1/3/4/5 confirmed on the display, 7 derived from a
 # recording); everything else shows as "other" with the raw code, never a guessed name.
-# Verified on an Eco-HK 50 (V30.0HAR.f): 1 = Aus, 5 = Leistungsbrand (output 81 %, O2 regulated).
 BOILER_STATES_WOOD_CHIP: dict[int, str] = dict(WOOD_CHIP_STATE_CODES)
 
 
