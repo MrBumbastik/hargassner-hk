@@ -2,18 +2,20 @@
 
 Jeder Schritt ist ein eigener Commit. Nach einer Unterbrechung: `git log --oneline` und diese Liste prüfen, beim ersten offenen Punkt der höchsten Priorität weitermachen und danach `pytest` laufen lassen.
 
-## Beta → 1.0 (Stand v0.9.0, 30.10.2026)
+## Beta → 1.0 (erledigt mit v1.0.0, 6.11.2026)
 
 Die Integration hat am Eco-HK 50 des Autors die beiden bisherigen Integrationen abgelöst (Dashboards, Energie-Dashboard). Für 1.0 fehlt:
 
 - [x] **Kaltstart mitgeschnitten (31.10., v0.9.1):** Mitschnitt `~/hargassner-daq/kaltstart_2026-10-31.csv` mit Displayfotos abgeglichen (Displayuhr ca. 3 min vor). 9 → 3 „Zündung Start“ (~15 s, Saugzug spült, Förderung startet) → 4 „Zündung“ (zuerst „Brennk. füllen“: Einschub ~2,5 min; dann Zündheizung + Gebläse ~6 min) → 5 „Leistungsbrand“ (Leistung springt auf 100 %, F2-Bit ~15 s später). Vom Startsignal bis Leistungsbrand ~7,5 min.
 - [x] **Zustandstabelle aus dem Service-Handbuch (v0.10.0):** Kap. 4.2 „Betriebszustände“ (Analogausgang Klemme 78/79): 1 AUS, 3 ZUENDPROBE, 4 ZUENDUNG, 5 LEISTUNGSBRAND, 6 GLUTERHALTUNG, 7 AUSBRAND, 9 ENTASCHUNG, 10 STB, 11 HAND, 12 STUECKHOLZ_NOTBETRIEB. Damit sind Code 7 (Abbrand) und Code 9 (Entaschung) geklärt.
-- [ ] **Code 7 = Abbrand am Display bestätigen.**
+- [x] **Code 7 = Abbrand:** laut Service-Handbuch (AUSBRAND), im Betrieb 31.10.–6.11. bei jedem Brennende vor „Aus“ beobachtet.
 - [x] **Störungstexte Eco-HK (v0.10.0):** 418 Codes aus der Meldungsliste des Service-Handbuchs (`errors_eco_hk.py`, nur Nr. + Text). Handbuch und Auszug mit Ursache/Lösung liegen lokal in `~/hargassner-docs/` (nicht ins Repo, Urheberrecht).
 - [ ] Bei der ersten echten Störung Code und Displaytext abgleichen.
 - [ ] **Betriebsstunden gegen das Display prüfen:** Startwerte stammen aus der DAQ-Kopfzeile (30.10. früh) und sind vermutlich 1–2 h zu niedrig; nach einigen Tagen Zuwachs vergleichen.
-- [ ] **1–2 Wochen Dauerbetrieb ohne Auffälligkeiten:** Telnet-Reconnect, HA-/Kesselneustart, Token-Refresh, Hackgut-Bilanz.
-- [ ] Danach Release 1.0.0 und Hinweis „Beta“ im README entfernen.
+- [x] **1 Woche Dauerbetrieb (31.10.–6.11.):** lokale Verbindung ohne Unterbrechung, Cloud-Ausfälle (4./5.11., bis ~3 h) selbst überbrückt, Hackgut-Bilanz plausibel (~100 kWh/d, ~31 kg/d), keine Log-Meldungen. Befund: Cloud-Verbindungssensor war bei Ausfall „nicht verfügbar“ statt „aus“ → in 1.0.0 korrigiert.
+- [x] Release 1.0.0, Hinweis „Beta“ im README entfernt.
+- [ ] Nach 1.0: Störungscodes bei der ersten echten Störung abgleichen; Betriebsstunden-Zählerstände gegen das Display prüfen.
+- [ ] Nach 1.0: Einschub-Zähler (`BSZ_ES_PEL`) ist ein steigender Zähler, wird aber als Messwert (`measurement`) geführt. Umstellen auf `total_increasing` braucht eine Statistik-Migration (Hinweis in HA), daher verschoben.
 
 ## Erledigt (v0.1.0)
 

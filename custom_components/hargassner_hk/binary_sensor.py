@@ -135,8 +135,9 @@ class CloudOnlineSensor(CloudEntity, BinarySensorEntity):
 
     @property
     def available(self) -> bool:
-        return self.coordinator.last_update_success
+        # A connectivity sensor reports a lost cloud as "off" (usable in automations), not as unavailable
+        return self.coordinator.data is not None
 
     @property
     def is_on(self) -> bool:
-        return self.coordinator.data.online
+        return self.coordinator.last_update_success and self.coordinator.data.online

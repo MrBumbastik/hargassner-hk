@@ -159,6 +159,27 @@ async def test_circuit_devices_hang_off_the_boiler(
     assert "via_device" not in caplog.text
 
 
+async def test_cloud_connection_turns_off_when_cloud_unreachable(
+    hass: HomeAssistant, fake_boiler: FakeBoiler, cloud_api
+) -> None:
+    """Lost cloud: connectivity sensor 'off' (not unavailable), back 'on' after the next good poll."""
+    from custom_components.hargassner_hk.cloud import CloudError
+
+    entry = await _setup(hass, fake_boiler)
+    online = _cloud_entity(hass, entry, "binary_sensor", "heater", "online")
+    cloud = entry.runtime_data.cloud
+    assert hass.states.get(online).state == "on"
+
+    with patch("custom_components.hargassner_hk.cloud.HargassnerCloud.get_widgets", AsyncMock(side_effect=CloudError("down"))):
+        await cloud.async_refresh()
+        await hass.async_block_till_done()
+    assert hass.states.get(online).state == "off"
+
+    await cloud.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get(online).state == "on"
+
+
 async def test_action_buttons(hass: HomeAssistant, fake_boiler: FakeBoiler, cloud_api) -> None:
     _, post_action = cloud_api
     entry = await _setup(hass, fake_boiler)

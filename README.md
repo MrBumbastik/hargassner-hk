@@ -3,22 +3,22 @@
 # Hargassner HK – Home Assistant Integration für Hackgutkessel
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-![Status](https://img.shields.io/badge/Status-Beta-yellow.svg)
-![Version](https://img.shields.io/badge/Version-0.10.2-blue.svg)
+![Status](https://img.shields.io/badge/Status-stabil%20(1%20Anlage)-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
 ![Vibecoded](https://img.shields.io/badge/vibecoded-KI--generiert-blueviolet.svg)
 
-> [!WARNING]
-> **Beta (v0.10.2): läuft im Alltag an genau einer Anlage. Bitte lesen, bevor du es installierst.**
+> [!IMPORTANT]
+> **Version 1.0: läuft seit Ende Oktober 2026 im Alltag an einer Anlage. Bitte lesen, bevor du es installierst.**
 >
 > - **Vibecoded:** Der Code wurde weitgehend von einer KI (Claude) geschrieben, im Dialog mit mir. Ich habe ihn nicht Zeile für Zeile geprüft. Es gibt rund 100 automatische Tests und eine CI (Tests, hassfest, HACS-Prüfung).
 > - **Getestet an einem Eco-HK 50, Firmware V30.0HAR.f:** Lokaler Datenstrom und Cloud laufen dort produktiv und haben die bisherigen Hargassner-Integrationen samt Dashboard und Energie-Dashboard ersetzt. Die Messwerte wurden mit der Hargassner-Cloud abgeglichen. Ein Schreibtest über die Cloud (Warmwasser-Solltemperatur ändern und zurücksetzen) war erfolgreich.
 > - **Andere Modelle und Firmwares sind ungetestet.** Kanalzuordnung, Zustands- und Störungscodes können dort abweichen.
-> - **Zustands- und Störungscodes des Eco-HK** stammen aus dem Service-Handbuch Eco-HK 20-60 von Hargassner; Start und Leistungsbrand sind zusätzlich am Display bestätigt. Eine echte Störung ist an der Testanlage noch nicht aufgetreten.
+> - **Zustands- und Störungscodes des Eco-HK** stammen aus dem Service-Handbuch Eco-HK 20-60 von Hargassner; Start, Zündung und Leistungsbrand sind zusätzlich am Display bestätigt, Abbrand und Entaschung im Betrieb beobachtet. Eine echte Störung ist an der Testanlage noch nicht aufgetreten.
 > - Die Cloud-Funktionen können **Werte in deinen Kessel schreiben**, zum Beispiel Sollwerte, Betriebsarten und das Kesselprogramm. Das ist **standardmäßig gesperrt** und muss in den Optionen ausdrücklich erlaubt werden („Werte über die Cloud ändern erlauben“). Die Verantwortung liegt bei dir.
 >
-> Was bis zur Version 1.0 noch fehlt, steht unter [Weg zu Version 1.0](#weg-zu-version-10). Rückmeldungen von weiteren Anlagen sind sehr willkommen, vor allem Diagnosedaten und Zustandscodes mit dem zugehörigen Displaytext.
+> Wie die Integration erprobt wurde und was noch offen ist, steht unter [Erprobung](#erprobung). Rückmeldungen von weiteren Anlagen sind sehr willkommen, vor allem Diagnosedaten und Zustandscodes mit dem zugehörigen Displaytext.
 
-> **English:** Unofficial Home Assistant integration for Hargassner wood chip boilers (Eco-HK). **Beta, vibecoded (AI-generated).** In daily use on one Eco-HK 50 (firmware V30.0HAR.f), values cross-checked against the Hargassner cloud; other models/firmwares are untested. Use at your own risk; bug reports welcome.
+> **English:** Unofficial Home Assistant integration for Hargassner wood chip boilers (Eco-HK). **Version 1.0, vibecoded (AI-generated).** In daily use on one Eco-HK 50 since late October 2026 (firmware V30.0HAR.f), values cross-checked against the Hargassner cloud; other models/firmwares are untested. Use at your own risk; bug reports welcome.
 
 Inoffizielle Integration für **Hargassner Hackschnitzelkessel (Eco-HK)** mit Touch-Tronic-Steuerung.
 
@@ -154,15 +154,21 @@ Geprüft an einem Eco-HK 50 mit Firmware V30.0HAR.f:
 - Die Kanalnamen im Eco-HK-Template können von den hier hinterlegten abweichen. Solche Kanäle erscheinen trotzdem, nur mit ihrem Template-Namen. Für die Ergänzung in `channels.py` helfen die **Diagnosedaten** (Gerät → ⋮ → Diagnose herunterladen); E-Mail und Passwort sind darin geschwärzt.
 - Der Touch-Tronic erlaubt eventuell nur **eine** Telnet-Verbindung gleichzeitig. Andere Tools, die Port 23 nutzen, solange parallel nicht verwenden.
 
-## Weg zu Version 1.0
+## Erprobung
 
-Die Beta läuft seit Oktober 2026 an einem Eco-HK 50. Version 1.0 gibt es, wenn diese Punkte erledigt sind:
+Version 1.0 lief vor dem Release eine Woche (31.10.–6.11.2026) an einem Eco-HK 50 im Alltag:
 
 - [x] **Kaltstart mitgeschnitten (31.10.2026):** Code 3 = „Zündung Start“, Code 4 = „Zündung“ (anfangs mit „Brennk. füllen“ am Display), Code 5 = „Leistungsbrand“, mit Displayfotos abgeglichen.
-- [x] **Zustands- und Störungscodes aus dem Service-Handbuch übernommen** (v0.10.0), darunter Abbrand (7) und Entaschung (9).
-- [ ] **Bei der ersten echten Störung prüfen,** ob Code und Text mit dem Display übereinstimmen.
-- [ ] **Betriebsstunden mit dem Display abgleichen:** gezählte Laufzeiten gegen die Zähler am Touch-Tronic prüfen, nach einigen Tagen Brennbetrieb.
-- [ ] **Ein bis zwei Wochen Dauerbetrieb:** Verbindungsabbrüche, Neustarts von HA und Kessel, Cloud-Token-Erneuerung, Hackgut-Bilanz über mehrere Tage.
+- [x] **Zustands- und Störungscodes aus dem Service-Handbuch übernommen** (v0.10.0). Im Betrieb kamen alle erwarteten Zustände vor: Entaschung → Zündung Start → Zündung → Leistungsbrand → Abbrand → Aus.
+- [x] **Lokale Verbindung:** in der Woche keine einzige Unterbrechung, auch nicht über HA-Neustarts hinweg.
+- [x] **Cloud:** Mehrere Ausfälle auf Hargassner-Seite (bis knapp 3 h) wurden ohne Eingriff überbrückt; Anmeldung und Token-Erneuerung liefen danach weiter.
+- [x] **Hackgut-Bilanz:** 2–3 Brennerstunden und rund 75–110 kWh Wärme pro Tag, entsprechend etwa 30 kg Hackgut. Das passt zur Nennleistung von 50 kW.
+- [x] Keine Fehler oder Warnungen der Integration im HA-Protokoll.
+
+Noch offen, aber kein Hindernis für 1.0:
+
+- [ ] **Bei der ersten echten Störung prüfen,** ob Code und Text mit dem Display übereinstimmen. Unbekannte Codes erscheinen als „Störung &lt;Nr&gt;“.
+- [ ] **Betriebsstunden-Zählerstände mit dem Display abgleichen.** Die gezählten Laufzeiten pro Tag sind plausibel; die Startwerte stammen aus der DAQ-Datei und können um 1–2 h abweichen.
 
 Weitere geplante Verbesserungen stehen in der [Roadmap](https://github.com/MrBumbastik/hargassner-hk/blob/main/TODO.md).
 
