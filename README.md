@@ -4,7 +4,7 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 ![Status](https://img.shields.io/badge/Status-stabil%20(1%20Anlage)-brightgreen.svg)
-![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-1.0.1-blue.svg)
 ![Vibecoded](https://img.shields.io/badge/vibecoded-KI--generiert-blueviolet.svg)
 
 > [!IMPORTANT]
@@ -168,7 +168,8 @@ Version 1.0 lief vor dem Release eine Woche (31.10.–6.11.2026) an einem Eco-HK
 Noch offen, aber kein Hindernis für 1.0:
 
 - [ ] **Bei der ersten echten Störung prüfen,** ob Code und Text mit dem Display übereinstimmen. Unbekannte Codes erscheinen als „Störung &lt;Nr&gt;“.
-- [ ] **Betriebsstunden-Zählerstände mit dem Display abgleichen.** Die gezählten Laufzeiten pro Tag sind plausibel; die Startwerte stammen aus der DAQ-Datei und können um 1–2 h abweichen.
+- [x] **Betriebsstunden-Zählerstände am 7.11.2026 mit dem Display abgeglichen.** Einschub (vom Kessel selbst) stimmte auf 0,1 h. Die übrigen lagen 0,2–7,7 h zu niedrig: Startwerte aus der DAQ-Datei, eine Nacht, in der Home Assistant selbst stillstand, und bis zu einer Minute pro HA-Neustart (behoben in 1.0.1).
+- [ ] **Nach einer Woche erneut vergleichen,** ob „Betriebsstunden Heizung“ am Display genau dem Brenner-Zähler entspricht (z. B. ob der Kessel den Abbrand mitzählt).
 
 Weitere geplante Verbesserungen stehen in der [Roadmap](https://github.com/MrBumbastik/hargassner-hk/blob/main/TODO.md).
 

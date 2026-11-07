@@ -14,7 +14,9 @@ Die Integration hat am Eco-HK 50 des Autors die beiden bisherigen Integrationen 
 - [ ] **Betriebsstunden gegen das Display prüfen:** Startwerte stammen aus der DAQ-Kopfzeile (30.10. früh) und sind vermutlich 1–2 h zu niedrig; nach einigen Tagen Zuwachs vergleichen.
 - [x] **1 Woche Dauerbetrieb (31.10.–6.11.):** lokale Verbindung ohne Unterbrechung, Cloud-Ausfälle (4./5.11., bis ~3 h) selbst überbrückt, Hackgut-Bilanz plausibel (~100 kWh/d, ~31 kg/d), keine Log-Meldungen. Befund: Cloud-Verbindungssensor war bei Ausfall „nicht verfügbar“ statt „aus“ → in 1.0.0 korrigiert.
 - [x] Release 1.0.0, Hinweis „Beta“ im README entfernt.
-- [ ] Nach 1.0: Störungscodes bei der ersten echten Störung abgleichen; Betriebsstunden-Zählerstände gegen das Display prüfen.
+- [ ] Nach 1.0: Störungscodes bei der ersten echten Störung abgleichen.
+- [x] **Zählerstände am 7.11. mit dem Display abgeglichen (v1.0.1):** Display 15:25 Heizung 6774, Zündung 278,3, Saugzug 8074,9, Einschub 4024,1 (Strom: 4024,09 ✓), Austragung 1886,0. HA lag zu niedrig (Brenner −7,7, Saugzug −6,0, Austragung −1,7, Zündung −0,2 h). Ursachen: (1) Startwerte vom 30.10. früh, gesetzt erst abends; (2) 2./3.11. 23:59–06:03 stand HA komplett still (auch andere Sensoren ohne Werte), der Kessel heizte in dieser Zeit; (3) beim HA-Neustart ging die Zählzeit seit dem letzten Speichern verloren (bis 60 s, nahezu täglicher Neustart ~06:00) → v1.0.1 speichert bei `homeassistant_stop`. Stream-Lücken > 3 s sind vernachlässigbar (gemessen 1,7 %). Werte per `set_operating_hours` auf Display + seit 15:25 gezählte Zeit gesetzt.
+- [ ] **~14.11. erneut mit dem Display vergleichen:** Weicht der Brenner weiter ab, zählt „Betriebsstunden Heizung“ mehr Zustände (z. B. den ganzen Abbrand) als `wood_chip_burning`; dann Regel anpassen.
 - [ ] Nach 1.0: Einschub-Zähler (`BSZ_ES_PEL`) ist ein steigender Zähler, wird aber als Messwert (`measurement`) geführt. Umstellen auf `total_increasing` braucht eine Statistik-Migration (Hinweis in HA), daher verschoben.
 
 ## Erledigt (v0.1.0)

@@ -7,8 +7,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_EMAIL, CONF_HOST, CONF_PASSWORD, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -244,6 +244,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: HargassnerHKConfigEntry)
         await client.stop()
         raise
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+
+    # HA does not unload entries on shutdown; without this the hours/fuel counted since the
+    # last throttled save (up to a minute) would be lost on every restart.
+    remove_stop_listener: CALLBACK_TYPE | None = None
+
+    async def _save_on_stop(_event: Event) -> None:
+        nonlocal remove_stop_listener
+        remove_stop_listener = None  # fired: HA already dropped the one-time listener
+        await local.async_save_fuel_now()
+
+    @callback
+    def _remove_stop_listener() -> None:
+        if remove_stop_listener is not None:
+            remove_stop_listener()
+
+    remove_stop_listener = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _save_on_stop)
+    entry.async_on_unload(_remove_stop_listener)
     return True
 
 

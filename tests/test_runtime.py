@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -256,3 +256,28 @@ def test_template_without_feed_channel_falls_back() -> None:
     assert effective_output(with_f2, "leistung", wood_chip=True) == 60.0
     assert effective_output(no_f2, "leistung", wood_chip=True) == 60.0  # old rule, nothing to gate on
     assert effective_output(burnt_out, "leistung", wood_chip=True) == 0.0
+
+
+async def test_counts_are_saved_on_shutdown(
+    hass: HomeAssistant, fake_boiler: FakeBoiler, caplog: pytest.LogCaptureFixture
+) -> None:
+    """HA does not unload entries on stop: counted hours/fuel must be written anyway."""
+    from unittest.mock import AsyncMock, patch
+
+    fake_boiler.line = LIVE_LINE
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: fake_boiler.host, CONF_PORT: fake_boiler.port, CONF_DAQ_XML: NO_STORAGE,
+              CONF_STREAM_EXTRAS: EXTRAS, CONF_USE_CLOUD: False},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    local = entry.runtime_data.local
+    with patch.object(local, "async_save_fuel_now", AsyncMock()) as save:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+    save.assert_awaited_once()
+    # Unloading after the stop event must not try to remove the already fired listener
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert "Unable to remove unknown job listener" not in caplog.text
